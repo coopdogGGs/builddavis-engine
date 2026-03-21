@@ -4,7 +4,7 @@
 
 use super::common::{Chunk, ChunkToModify, Section};
 use super::WorldEditor;
-use crate::block_definitions::GRASS_BLOCK;
+use crate::block_definitions::{GRASS_BLOCK, BEDROCK};
 use crate::progress::emit_gui_progress_update;
 use colored::Colorize;
 use fastanvil::Region;
@@ -31,7 +31,7 @@ fn get_base_chunk_sections() -> &'static [Section] {
         let mut chunk = ChunkToModify::default();
         for x in 0..16 {
             for z in 0..16 {
-                chunk.set_block(x, -62, z, GRASS_BLOCK);
+                chunk.set_block(x, 0, z, BEDROCK);
             }
         }
         chunk.sections().collect()

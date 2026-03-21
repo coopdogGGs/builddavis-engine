@@ -582,7 +582,8 @@ impl BedrockWriter {
         let (palette, indices) = self.build_palette_and_indices(section)?;
 
         // Calculate bits per block using valid Bedrock values: {1, 2, 3, 4, 5, 6, 8, 16}
-        let bits_per_block = bedrock_bits_per_block(palette.len() as u32);
+        let palette_len: u32 = palette.len() as u32;
+        let bits_per_block: u8 = bedrock_bits_per_block(palette_len);
 
         // Write palette type (bits << 1, not network format)
         buffer.write_u8(bits_per_block << 1)?;
@@ -622,7 +623,7 @@ impl BedrockWriter {
                 states: block
                     .states
                     .iter()
-                    .map(|(k, v)| (k.clone(), BedrockNbtValue::from(v)))
+                    .map(|(k, v): (&String, &BedrockBlockStateValue)| (k.clone(), BedrockNbtValue::from(v)))
                     .collect(),
             };
             let nbt_bytes =

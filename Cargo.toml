@@ -64,3 +64,13 @@ windows = { version = "0.62.0", features = ["Win32_System_Console"] }
 
 [dev-dependencies]
 tempfile = "3.26.0"
+
+[[bin]]
+name = "place"
+path = "src/bin/place/main.rs"
+required-features = ["bedrock"]
+
+[lib]
+name = "arnis"
+path = "src/lib.rs"
+crate-type = ["rlib"]
