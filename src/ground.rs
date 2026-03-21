@@ -288,7 +288,7 @@ impl Ground {
         }
 
         for (y, row) in heights.iter().enumerate() {
-            for (x, &h): (usize, &f64) in row.iter().enumerate() {
+            for (x, &h) in row.iter().enumerate() {
                 let normalized: u8 =
                     (((h - min_height) as f64 / (max_height - min_height) as f64) * 255.0) as u8;
                 img.put_pixel(
