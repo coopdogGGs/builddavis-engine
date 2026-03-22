@@ -645,18 +645,21 @@ pub fn generate_ground_layer(
                     }
 
                     // Fill underground with stone
+                    // BuildDavis ADR-004: bedrock at ground_level-15, stone above
+                    // This gives exactly 15 blocks to dig before hitting bedrock
+                    let bedrock_y = ground_y - 15;
                     if args.fillground {
                         editor.fill_column_absolute(
                             STONE,
                             x,
                             z,
-                            MIN_Y + 1,
+                            bedrock_y + 1,
                             ground_y - 3,
                             true, // skip_existing: don't overwrite blocks placed by element processing
                         );
                     }
-                    // Generate a bedrock level at MIN_Y
-                    editor.set_block_absolute(BEDROCK, x, MIN_Y, z, None, Some(&[BEDROCK]));
+                    // Generate a bedrock level at ground_level-15
+                    editor.set_block_absolute(BEDROCK, x, bedrock_y, z, None, Some(&[BEDROCK]));
 
                     block_counter += 1;
                     #[allow(clippy::manual_is_multiple_of)]

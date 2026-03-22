@@ -31,7 +31,8 @@ fn get_base_chunk_sections() -> &'static [Section] {
         let mut chunk = ChunkToModify::default();
         for x in 0..16 {
             for z in 0..16 {
-                chunk.set_block(x, 0, z, BEDROCK);
+                chunk.set_block(x, 34, z, BEDROCK);
+                for y in 35..=48_i32 { chunk.set_block(x, y, z, crate::block_definitions::STONE); }
             }
         }
         chunk.sections().collect()
