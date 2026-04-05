@@ -1,0 +1,1430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Build Davis — Minecraft World Project</title>
+<link rel="canonical" href="https://builddavis.org/">
+<meta property="og:title" content="Build Davis — Minecraft World Project">
+<meta property="og:description" content="The entire city of Davis, CA — rebuilt block by block in Minecraft.">
+<meta property="og:url" content="https://builddavis.org/">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --sky: #5B8DD9;
+  --sky-dark: #2D5FA6;
+  --grass: #5CA44B;
+  --grass-dark: #3A7A2D;
+  --dirt: #8B6348;
+  --stone: #8A8A8A;
+  --stone-dark: #4A4A4A;
+  --gold: #F0C040;
+  --gold-dark: #C89A10;
+  --night: #1A1F2E;
+  --night2: #242B3D;
+  --night3: #2F3850;
+  --white: #F8F8F0;
+  --red: #C84040;
+  --emerald: #20C060;
+  --pixel: 4px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; image-rendering: pixelated; }
+
+body {
+  font-family: 'Nunito', sans-serif;
+  background: var(--night);
+  color: var(--white);
+  overflow-x: hidden;
+  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16'%3E%3Crect width='4' height='4' fill='%23F0C040'/%3E%3Crect x='4' width='8' height='4' fill='%23F0C040'/%3E%3Crect x='12' width='4' height='4' fill='%23F0C040'/%3E%3Crect y='4' width='4' height='8' fill='%23F0C040'/%3E%3Crect x='12' y='4' width='4' height='8' fill='%23F0C040'/%3E%3Crect y='12' width='4' height='4' fill='%23F0C040'/%3E%3Crect x='4' y='12' width='8' height='4' fill='%23F0C040'/%3E%3Crect x='12' y='12' width='4' height='4' fill='%23F0C040'/%3E%3C/svg%3E") 8 8, crosshair;
+}
+
+/* ── PIXEL BORDER MIXIN ── */
+.pixel-box {
+  box-shadow:
+    0 -4px 0 0 #000,
+    0 4px 0 0 #000,
+    -4px 0 0 0 #000,
+    4px 0 0 0 #000;
+}
+
+/* ── STARS ── */
+.stars {
+  position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  overflow: hidden;
+}
+.star {
+  position: absolute;
+  width: 4px; height: 4px;
+  background: var(--white);
+  animation: twinkle var(--d, 3s) infinite var(--delay, 0s);
+}
+@keyframes twinkle {
+  0%,100% { opacity: 1; }
+  50% { opacity: .2; }
+}
+
+/* ── NAV ── */
+nav {
+  position: relative; z-index: 100;
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 20px 40px;
+  border-bottom: 4px solid var(--stone-dark);
+  background: var(--night);
+}
+.nav-logo {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 18px;
+  color: var(--gold);
+  text-shadow: 3px 3px 0 var(--gold-dark);
+  line-height: 1.4;
+}
+.nav-logo span { display: block; font-size: 11px; color: var(--grass); text-shadow: 1px 1px 0 var(--grass-dark); margin-top: 6px; }
+.nav-links { display: flex; gap: 24px; list-style: none; }
+.nav-links a {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 11px;
+  color: var(--stone);
+  text-decoration: none;
+  padding: 8px 12px;
+  transition: color .1s, background .1s;
+}
+.nav-links a:hover { color: var(--gold); background: var(--night2); }
+
+/* Discord button */
+.nav-discord {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 9px;
+  padding: 9px 16px;
+  background: #5865F2;
+  color: var(--white);
+  text-decoration: none;
+  display: inline-block;
+  box-shadow: 0 4px 0 #3b4ad4;
+  transition: transform .1s, background .1s;
+  flex-shrink: 0;
+}
+.nav-discord:hover { background: #6b77f5; transform: translateY(-2px); }
+.nav-discord:active { transform: translateY(2px); box-shadow: 0 2px 0 #3b4ad4; }
+
+/* ── HERO STATS ── */
+.hero-right {
+  position: absolute;
+  right: 60px; top: 50%;
+  transform: translateY(-50%);
+  z-index: 5;
+  width: 430px;
+  background: rgba(14,18,28,.88);
+  border: 3px solid #3A4060;
+  box-shadow: 0 0 0 1px rgba(255,255,255,.06), inset 0 1px 0 rgba(255,255,255,.06), 6px 6px 0 rgba(0,0,0,.5);
+  opacity: 0; animation: fadeIn .4s 1.0s forwards;
+}
+.hero-right-title {
+  background: rgba(26,34,54,.95);
+  border-bottom: 2px solid #3A4060;
+  padding: 14px 18px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 10px;
+  color: var(--gold);
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+.hero-stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+}
+.hero-stat {
+  padding: 20px 22px;
+  border-right: 1px solid rgba(255,255,255,.08);
+  border-bottom: 1px solid rgba(255,255,255,.08);
+  transition: background .15s;
+}
+.hero-stat:hover { background: rgba(240,192,64,.08); }
+.hero-stat:nth-child(even) { border-right: none; }
+.hero-stat-num {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 26px;
+  color: var(--gold);
+  text-shadow: 2px 2px 0 rgba(0,0,0,.6);
+  line-height: 1;
+}
+.hero-stat-label {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 8px;
+  color: rgba(248,248,240,.45);
+  line-height: 1.8;
+  margin-top: 7px;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+.hero-stat-icon {
+  font-size: 22px;
+  margin-bottom: 8px;
+  line-height: 1;
+  display: block;
+}
+
+/* ── HERO ── */
+.hero {
+  position: relative; z-index: 1;
+  min-height: 90vh;
+  display: flex; flex-direction: column;
+  justify-content: center; align-items: flex-start;
+  padding: 60px 40px;
+  overflow: hidden;
+}
+
+/* Pixelated sky background */
+.hero-bg {
+  position: absolute; inset: 0;
+  background: var(--night);
+  z-index: 0;
+}
+.hero-bg::before {
+  content: '';
+  position: absolute; inset: 0;
+  background:
+    repeating-linear-gradient(0deg, transparent 0 31px, rgba(255,255,255,.015) 31px 32px),
+    repeating-linear-gradient(90deg, transparent 0 31px, rgba(255,255,255,.015) 31px 32px);
+}
+
+/* Pixel isometric station */
+.iso-station {
+  position: absolute;
+  right: 40px; bottom: 40px;
+  width: 440px; height: 280px;
+  opacity: 0;
+  animation: fadeIn .4s 1.2s forwards;
+}
+
+/* ── PIXEL GROUND STRIP ── */
+.ground {
+  display: flex; align-items: flex-end;
+  position: absolute; bottom: 0; left: 0; right: 0;
+  height: 80px;
+  z-index: 2;
+  overflow: hidden;
+}
+.ground-block {
+  flex-shrink: 0;
+  image-rendering: pixelated;
+}
+
+.hero-content { position: relative; z-index: 5; max-width: 680px; }
+
+.hero-tag {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 9px;
+  color: var(--emerald);
+  margin-bottom: 24px;
+  display: flex; align-items: center; gap: 12px;
+  opacity: 0; animation: fadeIn .3s .2s forwards;
+}
+.hero-tag::before {
+  content: '▶';
+  color: var(--gold);
+  font-size: 10px;
+}
+
+.hero-title {
+  font-family: 'Press Start 2P', monospace;
+  font-size: clamp(28px, 4.5vw, 52px);
+  line-height: 1.4;
+  margin-bottom: 8px;
+  opacity: 0; animation: pixelReveal .5s .3s forwards;
+}
+.hero-title .t-white { color: var(--white); text-shadow: 4px 4px 0 #000; }
+.hero-title .t-gold  { color: var(--gold);  text-shadow: 4px 4px 0 var(--gold-dark); }
+.hero-title .t-green { color: var(--grass);  text-shadow: 4px 4px 0 var(--grass-dark); }
+
+.hero-sub {
+  font-family: 'Press Start 2P', monospace;
+  font-size: clamp(12px, 1.8vw, 18px);
+  color: var(--sky);
+  text-shadow: 2px 2px 0 var(--sky-dark);
+  margin-bottom: 32px;
+  line-height: 1.6;
+  opacity: 0; animation: fadeIn .4s .5s forwards;
+}
+
+.hero-desc {
+  font-size: 17px;
+  line-height: 1.8;
+  color: rgba(248,248,240,.75);
+  font-weight: 600;
+  max-width: 520px;
+  margin-bottom: 40px;
+  opacity: 0; animation: fadeIn .4s .6s forwards;
+}
+
+.hero-btns {
+  display: flex; gap: 16px; flex-wrap: wrap;
+  opacity: 0; animation: fadeIn .4s .7s forwards;
+}
+
+/* Pixel buttons */
+.px-btn {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 10px;
+  padding: 16px 24px;
+  text-decoration: none;
+  display: inline-block;
+  cursor: pointer;
+  border: none;
+  line-height: 1.4;
+  transition: transform .1s;
+  position: relative;
+}
+.px-btn:active { transform: translateY(2px); }
+
+.px-btn-green {
+  background: var(--grass);
+  color: var(--white);
+  box-shadow: 0 6px 0 var(--grass-dark), 4px 0 0 rgba(255,255,255,.2) inset, 0 4px 0 rgba(255,255,255,.15) inset;
+}
+.px-btn-green:hover { background: #6DC45B; }
+
+.px-btn-gold {
+  background: var(--gold);
+  color: var(--night);
+  box-shadow: 0 6px 0 var(--gold-dark), 4px 0 0 rgba(255,255,255,.3) inset, 0 4px 0 rgba(255,255,255,.2) inset;
+}
+.px-btn-gold:hover { background: #F8D060; }
+
+/* ── DAVISVILLE SIGN SECTION ── */
+.spawn-section {
+  position: relative; z-index: 1;
+  background: var(--night2);
+  border-top: 4px solid var(--stone-dark);
+  border-bottom: 4px solid var(--stone-dark);
+  padding: 80px 40px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 60px; align-items: center;
+}
+
+.spawn-visual {
+  display: flex; flex-direction: column; align-items: center;
+}
+
+/* Pixel art sign */
+.pixel-sign-frame {
+  background: var(--dirt);
+  border: 4px solid #5A3A20;
+  padding: 4px;
+  box-shadow: 4px 4px 0 #3A2010, 0 -4px 0 #6B4828 inset;
+  margin-bottom: 16px;
+  position: relative;
+}
+.pixel-sign-frame::before, .pixel-sign-frame::after {
+  content: '';
+  position: absolute;
+  bottom: -24px;
+  width: 12px; height: 24px;
+  background: var(--dirt);
+  border: 4px solid #5A3A20;
+  border-top: none;
+}
+.pixel-sign-frame::before { left: 30%; }
+.pixel-sign-frame::after  { right: 30%; }
+
+.pixel-sign-inner {
+  background: #C8A870;
+  padding: 20px 32px;
+  border: 2px solid #A08050;
+  text-align: center;
+}
+.pixel-sign-top {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 7px;
+  color: #5A3A20;
+  margin-bottom: 8px;
+  letter-spacing: .1em;
+}
+.pixel-sign-name {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 22px;
+  color: #2A1A08;
+  text-shadow: 2px 2px 0 rgba(0,0,0,.3);
+  letter-spacing: .05em;
+}
+.pixel-sign-bottom {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 6px;
+  color: #5A3A20;
+  margin-top: 8px;
+  letter-spacing: .08em;
+}
+
+.spawn-coords {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 8px;
+  color: var(--emerald);
+  background: rgba(32,192,96,.1);
+  border: 2px solid var(--emerald);
+  padding: 10px 16px;
+  margin-top: 24px;
+}
+.spawn-coords span { color: rgba(248,248,240,.5); display: block; font-size: 6px; margin-bottom: 4px; }
+
+.spawn-text h2 {
+  font-family: 'Press Start 2P', monospace;
+  font-size: clamp(14px, 2vw, 20px);
+  line-height: 1.8;
+  color: var(--white);
+  text-shadow: 2px 2px 0 #000;
+  margin-bottom: 24px;
+}
+.spawn-text h2 em { font-style: normal; color: var(--gold); }
+.spawn-text p {
+  font-size: 16px;
+  line-height: 1.9;
+  color: rgba(248,248,240,.7);
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+
+/* ── HOW IT WORKS ── */
+.how {
+  position: relative; z-index: 1;
+  background: var(--night);
+  padding: 80px 40px;
+}
+.section-head {
+  text-align: center;
+  margin-bottom: 56px;
+}
+.section-tag {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 9px;
+  color: var(--grass);
+  display: block;
+  margin-bottom: 16px;
+}
+.section-title {
+  font-family: 'Press Start 2P', monospace;
+  font-size: clamp(16px, 2.5vw, 26px);
+  color: var(--white);
+  text-shadow: 3px 3px 0 #000;
+  line-height: 1.6;
+}
+.section-title .t-gold { color: var(--gold); text-shadow: 3px 3px 0 var(--gold-dark); }
+
+.how-cards {
+  display: grid;
+  grid-template-columns: repeat(3,1fr);
+  gap: 4px;
+}
+.how-card {
+  background: var(--night2);
+  border: 4px solid var(--stone-dark);
+  padding: 32px 28px;
+  transition: transform .1s, border-color .2s;
+  opacity: 0;
+  transform: translateY(20px);
+}
+.how-card.visible { opacity: 1; transform: translateY(0); transition: opacity .4s, transform .4s, border-color .2s; }
+.how-card:hover { border-color: var(--gold); transform: translateY(-4px) !important; }
+
+.how-card-num {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 32px;
+  color: var(--gold);
+  text-shadow: 3px 3px 0 var(--gold-dark);
+  margin-bottom: 20px;
+  display: block;
+}
+.how-card-title {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 12px;
+  color: var(--white);
+  text-shadow: 1px 1px 0 #000;
+  margin-bottom: 16px;
+  line-height: 1.8;
+}
+.how-card-desc {
+  font-size: 15px;
+  color: rgba(248,248,240,.65);
+  line-height: 1.9;
+  font-weight: 600;
+}
+
+/* Inventory item strip */
+.inventory {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+  margin: 48px 0 0;
+  flex-wrap: wrap;
+}
+.inv-slot {
+  width: 56px; height: 56px;
+  background: var(--stone-dark);
+  border: 3px solid #666;
+  border-bottom-color: #333;
+  border-right-color: #333;
+  border-top-color: #888;
+  border-left-color: #888;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 28px;
+  position: relative;
+  cursor: pointer;
+  transition: border-color .1s;
+}
+.inv-slot:hover { border-color: var(--white); }
+.inv-slot .inv-count {
+  position: absolute;
+  bottom: 2px; right: 4px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 7px;
+  color: var(--white);
+  text-shadow: 1px 1px 0 #000;
+}
+.inv-tooltip {
+  position: absolute;
+  bottom: 64px; left: 50%;
+  transform: translateX(-50%);
+  background: var(--night);
+  border: 2px solid var(--gold);
+  padding: 6px 10px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 7px;
+  color: var(--gold);
+  white-space: nowrap;
+  display: none;
+  z-index: 10;
+  pointer-events: none;
+}
+.inv-slot:hover .inv-tooltip { display: block; }
+
+/* ── TWO TRACKS ── */
+.tracks-section {
+  position: relative; z-index: 1;
+  background: var(--night2);
+  border-top: 4px solid var(--stone-dark);
+  padding: 80px 40px;
+}
+.game-modes {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  margin-top: 48px;
+}
+.game-mode {
+  border: 4px solid var(--stone-dark);
+  padding: 40px 36px;
+  position: relative;
+  transition: border-color .2s;
+  cursor: pointer;
+}
+.game-mode:hover { border-color: var(--gold); }
+.game-mode-survival { background: linear-gradient(135deg, #1A2A1A 0%, var(--night2) 100%); }
+.game-mode-creative { background: linear-gradient(135deg, #1A1A2A 0%, var(--night2) 100%); }
+
+.mode-badge {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 8px;
+  padding: 6px 12px;
+  display: inline-block;
+  margin-bottom: 20px;
+}
+.mode-badge-survival { background: var(--grass); color: var(--white); box-shadow: 2px 2px 0 var(--grass-dark); }
+.mode-badge-creative { background: var(--sky);   color: var(--white); box-shadow: 2px 2px 0 var(--sky-dark); }
+
+.mode-title {
+  font-family: 'Press Start 2P', monospace;
+  font-size: clamp(16px, 2.5vw, 24px);
+  line-height: 1.5;
+  margin-bottom: 8px;
+  text-shadow: 3px 3px 0 #000;
+}
+.game-mode-survival .mode-title { color: var(--grass); }
+.game-mode-creative .mode-title { color: var(--sky); }
+
+.mode-subtitle {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 9px;
+  color: rgba(248,248,240,.45);
+  margin-bottom: 24px;
+  line-height: 1.8;
+}
+.mode-desc {
+  font-size: 16px;
+  color: rgba(248,248,240,.75);
+  line-height: 1.9;
+  font-weight: 600;
+  margin-bottom: 28px;
+}
+.mode-steps {
+  list-style: none;
+  margin-bottom: 32px;
+}
+.mode-steps li {
+  font-family: 'Nunito', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  color: rgba(248,248,240,.7);
+  padding: 10px 0;
+  border-bottom: 2px solid rgba(255,255,255,.07);
+  line-height: 1.7;
+  display: flex; gap: 10px; align-items: flex-start;
+}
+.mode-steps li:last-child { border-bottom: none; }
+.mode-steps li::before { content: '»'; color: var(--gold); flex-shrink: 0; }
+
+.reward-box {
+  background: rgba(0,0,0,.3);
+  border: 2px solid rgba(255,255,255,.08);
+  padding: 14px 16px;
+  margin-bottom: 28px;
+  font-size: 15px;
+  color: rgba(248,248,240,.7);
+  line-height: 1.75;
+  font-weight: 600;
+}
+.reward-box strong { color: var(--gold); display: block; font-family: 'Press Start 2P', monospace; font-size: 9px; margin-bottom: 8px; }
+
+/* ── APPLY ── */
+.apply-section {
+  position: relative; z-index: 1;
+  background: var(--night);
+  padding: 80px 40px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 60px; align-items: start;
+}
+.apply-left h2 {
+  font-family: 'Press Start 2P', monospace;
+  font-size: clamp(14px, 2vw, 22px);
+  color: var(--white);
+  text-shadow: 3px 3px 0 #000;
+  line-height: 1.8;
+  margin-bottom: 20px;
+}
+.apply-left h2 em { font-style: normal; color: var(--gold); text-shadow: 2px 2px 0 var(--gold-dark); }
+.apply-left p {
+  font-size: 15px;
+  color: rgba(248,248,240,.65);
+  line-height: 1.9;
+  font-weight: 600;
+  margin-bottom: 32px;
+}
+.perk-list { list-style: none; }
+.perk-list li {
+  font-family: 'Nunito', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  color: rgba(248,248,240,.75);
+  padding: 10px 0;
+  border-bottom: 2px solid rgba(255,255,255,.07);
+  display: flex; gap: 10px; align-items: center;
+  line-height: 1.7;
+}
+.perk-list li::before { content: '✦'; color: var(--gold); flex-shrink: 0; }
+
+.apply-form-wrap {
+  background: var(--night2);
+  border: 4px solid var(--stone-dark);
+  padding: 36px;
+}
+.form-heading {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 13px;
+  color: var(--gold);
+  text-shadow: 2px 2px 0 var(--gold-dark);
+  margin-bottom: 28px;
+  line-height: 1.6;
+}
+.f-group { margin-bottom: 18px; }
+.f-label {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 9px;
+  color: rgba(248,248,240,.5);
+  display: block;
+  margin-bottom: 8px;
+  letter-spacing: .08em;
+}
+.f-input, .f-select, .f-textarea {
+  width: 100%;
+  background: var(--night);
+  border: 2px solid var(--stone-dark);
+  color: var(--white);
+  padding: 12px 14px;
+  font-family: 'Nunito', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  outline: none;
+  transition: border-color .15s;
+  appearance: none;
+}
+.f-input:focus, .f-select:focus, .f-textarea:focus { border-color: var(--gold); }
+.f-input::placeholder { color: rgba(248,248,240,.2); }
+.f-textarea { resize: vertical; min-height: 72px; }
+.f-select option { background: var(--night); }
+.f-radios { display: flex; gap: 4px; }
+.f-radio {
+  flex: 1; text-align: center;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 7px;
+  padding: 10px 6px;
+  background: var(--night);
+  border: 2px solid var(--stone-dark);
+  color: rgba(248,248,240,.5);
+  cursor: pointer;
+  transition: all .15s;
+  line-height: 1.6;
+}
+.f-radio.on { background: rgba(240,192,64,.1); border-color: var(--gold); color: var(--gold); }
+.f-submit {
+  width: 100%; margin-top: 4px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 10px;
+  padding: 16px;
+  background: var(--grass);
+  color: var(--white);
+  border: none; cursor: pointer;
+  box-shadow: 0 6px 0 var(--grass-dark);
+  transition: transform .1s, box-shadow .1s;
+  line-height: 1.4;
+}
+.f-submit:hover { background: #6DC45B; }
+.f-submit:active { transform: translateY(4px); box-shadow: 0 2px 0 var(--grass-dark); }
+.f-success { display: none; text-align: center; padding: 40px 20px; }
+.f-success-icon { font-size: 48px; display: block; margin-bottom: 16px; }
+.f-success h3 { font-family: 'Press Start 2P', monospace; font-size: 13px; color: var(--gold); text-shadow: 2px 2px 0 var(--gold-dark); line-height: 1.8; margin-bottom: 12px; }
+.f-success p { font-size: 13px; color: rgba(248,248,240,.6); font-weight: 600; line-height: 1.8; }
+
+/* ── OSM COUNTER ── */
+.osm-bar {
+  background: var(--grass-dark);
+  border-top: 4px solid var(--grass);
+  padding: 20px 40px;
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  flex-wrap: wrap;
+}
+.osm-label { font-family: 'Press Start 2P', monospace; font-size: 8px; color: rgba(248,248,240,.6); }
+.osm-num { font-family: 'Press Start 2P', monospace; font-size: 18px; color: var(--white); text-shadow: 2px 2px 0 rgba(0,0,0,.5); }
+.osm-live { font-family: 'Press Start 2P', monospace; font-size: 7px; color: var(--gold); display: flex; align-items: center; gap: 8px; }
+.osm-blink { animation: blink 1s step-end infinite; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+/* ── FOOTER ── */
+footer {
+  background: #0A0E14;
+  border-top: 4px solid var(--stone-dark);
+  padding: 40px;
+  display: flex; justify-content: space-between; align-items: center;
+  flex-wrap: wrap; gap: 20px;
+}
+.footer-logo { font-family: 'Press Start 2P', monospace; font-size: 10px; color: rgba(248,248,240,.3); line-height: 1.8; }
+.footer-info { font-size: 12px; color: rgba(248,248,240,.3); line-height: 1.9; font-weight: 600; text-align: right; }
+.footer-info a { color: rgba(248,248,240,.5); text-decoration: none; }
+
+/* ── ANIMATIONS ── */
+@keyframes fadeIn { from{opacity:0} to{opacity:1} }
+@keyframes pixelReveal {
+  0%  { opacity:0; clip-path: inset(0 100% 0 0); }
+  100%{ opacity:1; clip-path: inset(0 0% 0 0); }
+}
+
+/* ── RESPONSIVE ── */
+/* ── TABLET (≤1024px) ── */
+@media(max-width:1024px){
+  .iso-station { display:none; }
+  .hero-right { display:none; }
+  .hero-content { max-width:560px; }
+  .how-cards { grid-template-columns:1fr 1fr; }
+  .apply-section { gap:40px; }
+}
+
+/* ── MOBILE (≤860px) ── */
+@media(max-width:860px){
+  /* Nav */
+  nav { padding:16px 20px; }
+  .nav-links { display:none; }
+
+  /* Hero */
+  .hero { padding:40px 20px 60px; min-height:auto; }
+  .iso-station { display:none; }
+  .hero-title { font-size:clamp(28px,9vw,52px) !important; }
+  .hero-sub { font-size:clamp(11px,3.5vw,16px); }
+  .hero-desc { font-size:16px; }
+  .hero-btns { flex-direction:column; gap:12px; }
+  .px-btn { display:block; text-align:center; }
+
+  /* Spawn */
+  .spawn-section { grid-template-columns:1fr; padding:48px 20px; gap:40px; }
+  .pixel-sign-name { font-size:18px; }
+
+  /* How */
+  .how { padding:48px 20px; }
+  .how-cards { grid-template-columns:1fr; }
+
+  /* Data source cards */
+  .data-grid-mobile { grid-template-columns:1fr !important; }
+
+  /* OSM guide steps — stack 2×2 on mobile */
+  .osm-steps-grid { grid-template-columns:1fr 1fr !important; }
+  /* Arrow connectors hidden on mobile */
+  .osm-step-arrow { display:none !important; }
+  /* OSM what-to-add grid */
+  .osm-what-grid-inner { grid-template-columns:1fr 1fr !important; }
+
+  /* Two tracks */
+  .tracks-section { padding:48px 20px; }
+  .game-modes { grid-template-columns:1fr; }
+  .game-mode { padding:32px 24px; }
+  .mode-title { font-size:clamp(28px,8vw,40px) !important; }
+
+  /* Apply */
+  .apply-section { grid-template-columns:1fr; padding:48px 20px; gap:40px; }
+  .apply-form-wrap { padding:24px 20px; }
+
+  /* Footer */
+  footer { padding:28px 20px; flex-direction:column; text-align:center; gap:12px; }
+  .footer-info { text-align:center; }
+}
+
+/* ── SMALL MOBILE (≤480px) ── */
+@media(max-width:480px){
+  .hero { padding:32px 16px 48px; }
+  .spawn-section, .how, .tracks-section, .apply-section { padding:40px 16px; }
+  .pixel-sign-name { font-size:15px; }
+  .how-card { padding:24px 20px; }
+  .osm-steps-grid { grid-template-columns:1fr !important; }
+  .osm-what-grid-inner { grid-template-columns:1fr !important; }
+  .game-mode { padding:28px 20px; }
+  .apply-form-wrap { padding:20px 16px; }
+  .hero-btns { gap:10px; }
+  nav { padding:12px 16px; }
+  .nav-logo { font-size:14px !important; }
+  .nav-logo span { font-size:9px !important; }
+}
+</style>
+</head>
+<body>
+
+<!-- Stars -->
+<div class="stars" id="stars"></div>
+
+<nav>
+  <div class="nav-logo">
+    BUILD DAVIS
+    <span>A MINECRAFT WORLD PROJECT</span>
+  </div>
+  <ul class="nav-links">
+    <li><a href="#map">MAP DAVIS</a></li>
+    <li><a href="#build">BUILD DAVIS</a></li>
+    <li><a href="#how">HOW</a></li>
+    <li><a href="#apply">APPLY</a></li>
+  </ul>
+  <a href="https://discord.gg/Ujq724Evu5" target="_blank" class="nav-discord">⌨ DISCORD</a>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-content">
+    <div class="hero-tag">NEW WORLD GENERATING...</div>
+    <div class="hero-title">
+      <div class="t-white">DAVIS,</div>
+      <div class="t-gold">CALIFORNIA</div>
+      <div class="t-green">IN MINECRAFT.</div>
+    </div>
+    <div class="hero-sub">The most accurate block-for-block<br>recreation ever built.</div>
+    <p class="hero-desc">
+      Real LiDAR terrain. Real building heights. Real bike paths. Real valley oaks. We're building Davis from actual geodata — and we need people who know and love this town to help us finish it.
+    </p>
+    <div class="hero-btns">
+      <a href="#map" class="px-btn px-btn-green">▶ HELP MAP DAVIS</a>
+      <a href="#apply" class="px-btn px-btn-gold">✦ APPLY TO BUILD</a>
+    </div>
+  </div>
+
+  <!-- World statistics panel -->
+  <div class="hero-right">
+    <div class="hero-right-title">▸ WORLD STATS</div>
+    <div class="hero-stats-grid">
+      <div class="hero-stat">
+        <span class="hero-stat-icon">⬛</span>
+        <div class="hero-stat-num">3.0B</div>
+        <div class="hero-stat-label">BLOCKS<br>PLACED</div>
+      </div>
+      <div class="hero-stat">
+        <span class="hero-stat-icon">🏠</span>
+        <div class="hero-stat-num">~20K</div>
+        <div class="hero-stat-label">BUILDINGS<br>MODELED</div>
+      </div>
+      <div class="hero-stat">
+        <span class="hero-stat-icon">🌳</span>
+        <div class="hero-stat-num">48K</div>
+        <div class="hero-stat-label">TREES<br>PLACED</div>
+      </div>
+      <div class="hero-stat">
+        <span class="hero-stat-icon">🛣️</span>
+        <div class="hero-stat-num">7K</div>
+        <div class="hero-stat-label">ROAD<br>SEGMENTS</div>
+      </div>
+      <div class="hero-stat">
+        <span class="hero-stat-icon">🚲</span>
+        <div class="hero-stat-num">100mi</div>
+        <div class="hero-stat-label">BIKE<br>PATHS</div>
+      </div>
+      <div class="hero-stat">
+        <span class="hero-stat-icon">🏛️</span>
+        <div class="hero-stat-num">65</div>
+        <div class="hero-stat-label">LANDMARKS<br>MAPPED</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- DAVIS STATION SPAWN -->
+<section class="spawn-section">
+  <div class="spawn-visual">
+    <!-- Davis Amtrak Station — Mission Revival 1913, pixel art based on real building -->
+    <svg viewBox="0 0 400 200" xmlns="http://www.w3.org/2000/svg" style="image-rendering:pixelated;width:100%;max-width:420px;display:block;margin:0 auto 16px;">
+
+      <!-- === SKY & GROUND === -->
+      <rect x="0" y="0" width="400" height="200" fill="#7BB8D4"/>
+      <rect x="0" y="155" width="400" height="45" fill="#C8B888"/>
+      <rect x="0" y="155" width="400" height="3" fill="#A89860"/>
+
+      <!-- LEFT TREE — Minecraft blocky oak -->
+      <rect x="15" y="112" width="6" height="43" fill="#7A4A20"/>
+      <rect x="0"  y="88"  width="36" height="24" fill="#2E6614"/>
+      <rect x="4"  y="80"  width="28" height="32" fill="#2E6614"/>
+      <rect x="8"  y="74"  width="20" height="10" fill="#3A7A1C"/>
+      <rect x="12" y="70"  width="12" height="6"  fill="#3A7A1C"/>
+      <rect x="0"  y="88"  width="36" height="3"  fill="#4A9A2C"/>
+      <rect x="4"  y="80"  width="28" height="3"  fill="#4A9A2C"/>
+
+      <!-- RIGHT TREE — Minecraft blocky oak -->
+      <rect x="379" y="112" width="6" height="43" fill="#7A4A20"/>
+      <rect x="364" y="88"  width="36" height="24" fill="#2E6614"/>
+      <rect x="368" y="80"  width="28" height="32" fill="#2E6614"/>
+      <rect x="372" y="74"  width="20" height="10" fill="#3A7A1C"/>
+      <rect x="376" y="70"  width="12" height="6"  fill="#3A7A1C"/>
+      <rect x="364" y="88"  width="36" height="3"  fill="#4A9A2C"/>
+      <rect x="368" y="80"  width="28" height="3"  fill="#4A9A2C"/>
+
+      <!-- ============================================================ -->
+      <!-- BUILDING — matches real Davis station symmetric facade        -->
+      <!-- Layout: left wing | center section (taller) | right wing     -->
+      <!-- Left wing: x=44–148  Center: x=148–252  Right: x=252–356    -->
+      <!-- ============================================================ -->
+
+      <!-- === LEFT WING === -->
+      <!-- Wall body -->
+      <rect x="44" y="88" width="104" height="67" fill="#D4A972"/>
+      <!-- Left wing flat parapet top (slight raise) -->
+      <rect x="40" y="84" width="108" height="8" fill="#D4A972"/>
+      <rect x="40" y="82" width="108" height="3" fill="#B88C50"/>
+      <!-- Wing roof: dark tile strip at eave -->
+      <rect x="40" y="80" width="112" height="8" fill="#3A2010"/>
+      <rect x="40" y="88" width="112" height="3" fill="#1A0A04"/>
+      <!-- Corbels under left wing eave (beam ends) -->
+      <rect x="52"  y="85" width="6" height="7" fill="#2A1408"/>
+      <rect x="68"  y="85" width="6" height="7" fill="#2A1408"/>
+      <rect x="84"  y="85" width="6" height="7" fill="#2A1408"/>
+      <rect x="100" y="85" width="6" height="7" fill="#2A1408"/>
+      <rect x="116" y="85" width="6" height="7" fill="#2A1408"/>
+      <rect x="132" y="85" width="6" height="7" fill="#2A1408"/>
+
+      <!-- Left wing arcade openings — solid fills only, no stroke outlines -->
+      <rect x="58" y="115" width="36" height="40" fill="#1A1208"/>
+      <ellipse cx="76" cy="115" rx="18" ry="14" fill="#1A1208"/>
+      <rect x="55" y="115" width="3" height="40" fill="#C09060"/>
+      <rect x="91" y="115" width="3" height="40" fill="#C09060"/>
+      <rect x="102" y="115" width="36" height="40" fill="#1A1208"/>
+      <ellipse cx="120" cy="115" rx="18" ry="14" fill="#1A1208"/>
+      <rect x="99"  y="115" width="3" height="40" fill="#C09060"/>
+      <rect x="135" y="115" width="3" height="40" fill="#C09060"/>
+
+      <!-- === RIGHT WING (mirror of left) === -->
+      <rect x="252" y="88" width="104" height="67" fill="#D4A972"/>
+      <rect x="252" y="84" width="108" height="8" fill="#D4A972"/>
+      <rect x="252" y="82" width="108" height="3" fill="#B88C50"/>
+      <rect x="248" y="80" width="112" height="8" fill="#3A2010"/>
+      <rect x="248" y="88" width="112" height="3" fill="#1A0A04"/>
+      <!-- Corbels -->
+      <rect x="252" y="85" width="6" height="7" fill="#2A1408"/>
+      <rect x="268" y="85" width="6" height="7" fill="#2A1408"/>
+      <rect x="284" y="85" width="6" height="7" fill="#2A1408"/>
+      <rect x="300" y="85" width="6" height="7" fill="#2A1408"/>
+      <rect x="316" y="85" width="6" height="7" fill="#2A1408"/>
+      <rect x="332" y="85" width="6" height="7" fill="#2A1408"/>
+      <!-- Right wing arcade openings — solid fills only -->
+      <rect x="262" y="115" width="36" height="40" fill="#1A1208"/>
+      <ellipse cx="280" cy="115" rx="18" ry="14" fill="#1A1208"/>
+      <rect x="259" y="115" width="3" height="40" fill="#C09060"/>
+      <rect x="295" y="115" width="3" height="40" fill="#C09060"/>
+      <rect x="306" y="115" width="36" height="40" fill="#1A1208"/>
+      <ellipse cx="324" cy="115" rx="18" ry="14" fill="#1A1208"/>
+      <rect x="303" y="115" width="3" height="40" fill="#C09060"/>
+      <rect x="339" y="115" width="3" height="40" fill="#C09060"/>
+
+      <!-- === CENTER SECTION (taller, more prominent) === -->
+      <!-- Wall -->
+      <rect x="144" y="58" width="112" height="97" fill="#D4A972"/>
+      <!-- Center section is taller — raised parapet with rounded arch top (Mission Revival) -->
+      <!-- Rounded parapet top -->
+      <rect x="140" y="50" width="120" height="12" fill="#D4A972"/>
+      <ellipse cx="200" cy="50" rx="44" ry="14" fill="#D4A972"/>
+      <!-- Parapet outline/cap (dark border) -->
+      <rect x="140" y="62" width="120" height="3" fill="#B88C50"/>
+      <!-- Center roof: dark tile band, full width including overhang -->
+      <rect x="136" y="60" width="128" height="10" fill="#3A2010"/>
+      <rect x="136" y="68" width="128" height="3" fill="#1A0A04"/>
+      <!-- Corbels under center eave -->
+      <rect x="148" y="65" width="6" height="7" fill="#2A1408"/>
+      <rect x="162" y="65" width="6" height="7" fill="#2A1408"/>
+      <rect x="176" y="65" width="6" height="7" fill="#2A1408"/>
+      <rect x="192" y="65" width="6" height="7" fill="#2A1408"/>
+      <rect x="208" y="65" width="6" height="7" fill="#2A1408"/>
+      <rect x="224" y="65" width="6" height="7" fill="#2A1408"/>
+      <rect x="238" y="65" width="6" height="7" fill="#2A1408"/>
+
+      <!-- "DAVIS" SIGN — black rectangle, white text, centered high on facade -->
+      <rect x="162" y="72" width="76" height="16" fill="#181008" rx="1"/>
+      <rect x="164" y="74" width="72" height="12" fill="#141008" rx="1"/>
+      <text x="200" y="83" font-family="'Press Start 2P',monospace" font-size="8" fill="#FFFFFF" text-anchor="middle" font-weight="bold" letter-spacing="2">DAVIS</text>
+
+      <!-- Small circular medallion below sign (matches real building detail) -->
+      <circle cx="200" cy="98" r="8" fill="#C09060"/>
+      <circle cx="200" cy="98" r="6" fill="#D4A972"/>
+      <circle cx="200" cy="98" r="4" fill="#B88C50"/>
+
+      <!-- MAIN CENTER ARCH — large entrance arch, solid fills only -->
+      <rect x="170" y="115" width="60" height="40" fill="#1A1208"/>
+      <ellipse cx="200" cy="115" rx="30" ry="22" fill="#1A1208"/>
+      <rect x="165" y="115" width="5" height="40" fill="#C09060"/>
+      <rect x="230" y="115" width="5" height="40" fill="#C09060"/>
+      <!-- Keystone at arch top -->
+      <rect x="197" y="89" width="6" height="8" fill="#B88C50"/>
+
+      <!-- Lower center wall above arch (between arch top and windows) -->
+      <!-- Plant pots / lanterns flanking entrance -->
+      <rect x="163" y="148" width="8" height="7" fill="#8B6A40"/>
+      <rect x="165" y="145" width="4" height="4" fill="#6B8C40"/>
+      <rect x="229" y="148" width="8" height="7" fill="#8B6A40"/>
+      <rect x="231" y="145" width="4" height="4" fill="#6B8C40"/>
+
+      <!-- === PLATFORM (foreground) === -->
+      <rect x="30" y="152" width="340" height="8" fill="#D8D0A8"/>
+      <rect x="30" y="152" width="340" height="2" fill="#E8E0C0"/>
+      <rect x="30" y="158" width="340" height="2" fill="#B0A878"/>
+
+      <!-- === RAIL TRACKS === -->
+      <!-- Tie 1 -->
+      <rect x="30"  y="162" width="12" height="24" fill="#5A3A20"/>
+      <rect x="52"  y="162" width="12" height="24" fill="#5A3A20"/>
+      <rect x="74"  y="162" width="12" height="24" fill="#5A3A20"/>
+      <rect x="96"  y="162" width="12" height="24" fill="#5A3A20"/>
+      <rect x="118" y="162" width="12" height="24" fill="#5A3A20"/>
+      <rect x="140" y="162" width="12" height="24" fill="#5A3A20"/>
+      <rect x="162" y="162" width="12" height="24" fill="#5A3A20"/>
+      <rect x="184" y="162" width="12" height="24" fill="#5A3A20"/>
+      <rect x="206" y="162" width="12" height="24" fill="#5A3A20"/>
+      <rect x="228" y="162" width="12" height="24" fill="#5A3A20"/>
+      <rect x="250" y="162" width="12" height="24" fill="#5A3A20"/>
+      <rect x="272" y="162" width="12" height="24" fill="#5A3A20"/>
+      <rect x="294" y="162" width="12" height="24" fill="#5A3A20"/>
+      <rect x="316" y="162" width="12" height="24" fill="#5A3A20"/>
+      <rect x="338" y="162" width="12" height="24" fill="#5A3A20"/>
+      <rect x="360" y="162" width="12" height="24" fill="#5A3A20"/>
+      <!-- Rails -->
+      <rect x="0"   y="165" width="400" height="5" fill="#6A4A30"/>
+      <rect x="0"   y="168" width="400" height="2" fill="#9A7A58"/>
+      <rect x="0"   y="173" width="400" height="5" fill="#6A4A30"/>
+      <rect x="0"   y="176" width="400" height="2" fill="#9A7A58"/>
+
+    </svg>
+    <div class="spawn-coords">
+      <span>SPAWN POINT</span>
+      38.5435°N · 121.7377°W
+    </div>
+  </div>
+  <div class="spawn-text">
+    <h2>You spawn at the<br><em>iconic Davis</em> sign.</h2>
+    <p>Every player's first moment is stepping onto the 1913 Mission Revival Amtrak station platform — the same building that's welcomed people to Davis for over a century.</p>
+    <p>From there: the bike paths, the oaks, the co-ops, the campus. Everything placed from real data. Everything polished by people who know this town.</p>
+    <a href="#apply" class="px-btn px-btn-gold" style="margin-top:8px">▶ JOIN THE PROJECT</a>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="how" id="how">
+  <div class="section-head">
+    <span class="section-tag">// HOW IT WORKS</span>
+    <h2 class="section-title">REAL DATA.<br><span class="t-gold">REAL PEOPLE.</span><br>REAL DAVIS.</h2>
+  </div>
+  <div class="how-cards">
+    <div class="how-card">
+      <span class="how-card-num">01</span>
+      <div class="how-card-title">WE GENERATE<br>THE BASE WORLD</div>
+      <p class="how-card-desc">Our pipeline fuses LiDAR terrain, OpenStreetMap buildings, AI-traced footprints, and City of Davis GIS data to auto-generate a 1-metre-accurate Minecraft world of the whole town.</p>
+    </div>
+    <div class="how-card">
+      <span class="how-card-num">02</span>
+      <div class="how-card-title">THE COMMUNITY<br>MAPS THE DETAILS</div>
+      <p class="how-card-desc">Benches, bike racks, murals, signage — things databases miss. We need people who know Davis to add the bench outside Mishka's, the bikes outside Shields Library.</p>
+    </div>
+    <div class="how-card">
+      <span class="how-card-num">03</span>
+      <div class="how-card-title">CONTRIBUTORS<br>POLISH THE SERVER</div>
+      <p class="how-card-desc">Approved builders join the Minecraft server — Java or Bedrock. Claim a zone, get the style guide, and make your neighbourhood look exactly like the real thing.</p>
+    </div>
+  </div>
+
+  <!-- Data sources — clear cards replacing the inventory bar -->
+  <div style="margin-top:48px;">
+    <div style="font-family:'Press Start 2P',monospace;font-size:11px;color:var(--grass);margin-bottom:20px;">// POWERED BY 7 REAL DATA SOURCES</div>
+    <div class="data-grid-mobile" style="display:grid;grid-template-columns:repeat(2,1fr);gap:4px;">
+      <div style="background:var(--night2);border:4px solid var(--stone-dark);padding:24px 24px;display:flex;gap:16px;align-items:flex-start;transition:border-color .2s;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--stone-dark)'">
+        <div style="font-size:32px;flex-shrink:0;">⛰️</div>
+        <div>
+          <div style="font-family:'Press Start 2P',monospace;font-size:9px;color:var(--gold);margin-bottom:8px;line-height:1.6;">USGS 3DEP LIDAR</div>
+          <div style="font-size:16px;font-weight:800;color:var(--white);margin-bottom:6px;">Terrain & elevation</div>
+          <div style="font-size:14px;line-height:1.8;color:rgba(248,248,240,.6);font-weight:600;">1-metre resolution elevation for all of Yolo County. Every slope and ditch captured — 30× more detailed than existing tools.</div>
+        </div>
+      </div>
+      <div style="background:var(--night2);border:4px solid var(--stone-dark);padding:24px 24px;display:flex;gap:16px;align-items:flex-start;transition:border-color .2s;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--stone-dark)'">
+        <div style="font-size:32px;flex-shrink:0;">🏙️</div>
+        <div>
+          <div style="font-family:'Press Start 2P',monospace;font-size:9px;color:var(--gold);margin-bottom:8px;line-height:1.6;">OVERTURE MAPS</div>
+          <div style="font-size:16px;font-weight:800;color:var(--white);margin-bottom:6px;">Building footprints & heights</div>
+          <div style="font-size:14px;line-height:1.8;color:rgba(248,248,240,.6);font-weight:600;">1.2 billion AI-traced building outlines from satellite imagery, with height estimates for every structure.</div>
+        </div>
+      </div>
+      <div style="background:var(--night2);border:4px solid var(--stone-dark);padding:24px 24px;display:flex;gap:16px;align-items:flex-start;transition:border-color .2s;" onmouseover="this.style.borderColor='var(--grass)'" onmouseout="this.style.borderColor='var(--stone-dark)'">
+        <div style="font-size:32px;flex-shrink:0;">🗺️</div>
+        <div>
+          <div style="font-family:'Press Start 2P',monospace;font-size:9px;color:var(--grass);margin-bottom:8px;line-height:1.6;">OPENSTREETMAP</div>
+          <div style="font-size:16px;font-weight:800;color:var(--white);margin-bottom:6px;">Roads, buildings & amenities</div>
+          <div style="font-size:14px;line-height:1.8;color:rgba(248,248,240,.6);font-weight:600;">Community-contributed map data. The richer OSM is for Davis, the more detailed the world. <strong style="color:var(--grass);">This is where you can help.</strong></div>
+        </div>
+      </div>
+      <div style="background:var(--night2);border:4px solid var(--stone-dark);padding:24px 24px;display:flex;gap:16px;align-items:flex-start;transition:border-color .2s;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--stone-dark)'">
+        <div style="font-size:32px;flex-shrink:0;">🚲</div>
+        <div>
+          <div style="font-family:'Press Start 2P',monospace;font-size:9px;color:var(--gold);margin-bottom:8px;line-height:1.6;">CITY OF DAVIS GIS</div>
+          <div style="font-size:16px;font-weight:800;color:var(--white);margin-bottom:6px;">Bike network, trees & zoning</div>
+          <div style="font-size:14px;line-height:1.8;color:rgba(248,248,240,.6);font-weight:600;">Davis's 100-mile bike path network and town tree inventory — valley oaks become dark oak blocks, pines become spruce.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- OSM GUIDE -->
+<section style="position:relative;z-index:1;background:var(--night);padding:80px 40px;border-bottom:4px solid var(--stone-dark);">
+  <div class="section-head">
+    <span class="section-tag">// TRACK 01 · NO MINECRAFT NEEDED</span>
+    <h2 class="section-title">Help us <span class="t-gold">map Davis.</span></h2>
+  </div>
+  <div style="background:var(--night2);border:4px solid var(--grass-dark);padding:28px 32px;margin-bottom:40px;display:flex;gap:20px;align-items:flex-start;">
+    <div style="font-size:36px;flex-shrink:0;">🗺️</div>
+    <div>
+      <div style="font-family:'Press Start 2P',monospace;font-size:11px;color:var(--grass);margin-bottom:12px;">WHAT IS OPENSTREETMAP?</div>
+      <p style="font-size:16px;line-height:1.85;color:rgba(248,248,240,.8);font-weight:600;">OpenStreetMap (OSM) is a free, community-built map of the world — like Wikipedia, but for maps. Our world generator pulls data directly from OSM to place benches, bike racks, trees, and street detail into Minecraft. The more OSM is filled in for Davis, the more alive our world will be. <strong style="color:var(--white);">You don't need Minecraft — just a browser.</strong></p>
+    </div>
+  </div>
+  <div class="osm-steps-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-bottom:40px;">
+    <div style="background:var(--night2);border:4px solid var(--stone-dark);padding:28px 20px;position:relative;">
+      <div style="font-family:'Press Start 2P',monospace;font-size:28px;color:var(--grass);text-shadow:2px 2px 0 var(--grass-dark);display:block;margin-bottom:14px;">01</div>
+      <div style="font-family:'Press Start 2P',monospace;font-size:10px;color:var(--white);margin-bottom:12px;line-height:1.8;">Create a free account</div>
+      <div style="font-size:14px;line-height:1.85;color:rgba(248,248,240,.65);font-weight:600;margin-bottom:12px;">Go to <strong style="color:var(--white);">openstreetmap.org</strong> and click Sign Up. Free — just needs an email.</div>
+      <div style="background:rgba(92,164,75,.12);border-left:3px solid var(--grass);padding:8px 10px;font-size:13px;font-weight:700;color:var(--grass);line-height:1.6;">Takes about 2 minutes</div>
+      <div class="osm-step-arrow" style="position:absolute;right:-16px;top:44%;font-size:18px;color:var(--grass-dark);z-index:2;">▶</div>
+    </div>
+    <div style="background:var(--night2);border:4px solid var(--stone-dark);padding:28px 20px;position:relative;">
+      <div style="font-family:'Press Start 2P',monospace;font-size:28px;color:var(--grass);text-shadow:2px 2px 0 var(--grass-dark);display:block;margin-bottom:14px;">02</div>
+      <div style="font-family:'Press Start 2P',monospace;font-size:10px;color:var(--white);margin-bottom:12px;line-height:1.8;">Open Davis in editor</div>
+      <div style="font-size:14px;line-height:1.85;color:rgba(248,248,240,.65);font-weight:600;margin-bottom:12px;">Click the button below — it opens OSM pre-loaded on Davis. Then click <strong style="color:var(--white);">Edit → Edit with iD</strong> in the top bar.</div>
+      <div style="background:rgba(92,164,75,.12);border-left:3px solid var(--grass);padding:8px 10px;font-size:13px;font-weight:700;color:var(--grass);line-height:1.6;">Works in your browser — no download</div>
+      <div class="osm-step-arrow" style="position:absolute;right:-16px;top:44%;font-size:18px;color:var(--grass-dark);z-index:2;">▶</div>
+    </div>
+    <div style="background:var(--night2);border:4px solid var(--stone-dark);padding:28px 20px;position:relative;">
+      <div style="font-family:'Press Start 2P',monospace;font-size:28px;color:var(--grass);text-shadow:2px 2px 0 var(--grass-dark);display:block;margin-bottom:14px;">03</div>
+      <div style="font-family:'Press Start 2P',monospace;font-size:10px;color:var(--white);margin-bottom:12px;line-height:1.8;">Add what you know</div>
+      <div style="font-size:14px;line-height:1.85;color:rgba(248,248,240,.65);font-weight:600;margin-bottom:12px;">See a bench on a Davis street? Click <strong style="color:var(--white);">Point</strong>, drop it on the map, choose "bench." Same for bike racks, trees, bins.</div>
+      <div style="background:rgba(92,164,75,.12);border-left:3px solid var(--grass);padding:8px 10px;font-size:13px;font-weight:700;color:var(--grass);line-height:1.6;">First edit takes under 5 minutes</div>
+      <div class="osm-step-arrow" style="position:absolute;right:-16px;top:44%;font-size:18px;color:var(--grass-dark);z-index:2;">▶</div>
+    </div>
+    <div style="background:var(--night2);border:4px solid var(--stone-dark);padding:28px 20px;">
+      <div style="font-family:'Press Start 2P',monospace;font-size:28px;color:var(--grass);text-shadow:2px 2px 0 var(--grass-dark);display:block;margin-bottom:14px;">04</div>
+      <div style="font-family:'Press Start 2P',monospace;font-size:10px;color:var(--white);margin-bottom:12px;line-height:1.8;">It appears in the world</div>
+      <div style="font-size:14px;line-height:1.85;color:rgba(248,248,240,.65);font-weight:600;margin-bottom:12px;">At our next generation run, your edit is pulled in automatically. Your bench becomes a stone slab on a fence post — exactly where you placed it.</div>
+      <div style="background:rgba(240,192,64,.12);border-left:3px solid var(--gold);padding:8px 10px;font-size:13px;font-weight:700;color:var(--gold);line-height:1.6;">10+ edits = early server access</div>
+    </div>
+  </div>
+  <div style="background:var(--night2);border:4px solid var(--sky-dark);padding:24px 28px;margin-bottom:32px;">
+    <div style="font-family:'Press Start 2P',monospace;font-size:10px;color:var(--sky);margin-bottom:16px;line-height:1.6;">// MOST USEFUL THINGS TO ADD</div>
+    <div class="osm-what-grid-inner" style="display:grid;grid-template-columns:repeat(3,1fr);gap:3px;">
+      <div style="background:var(--night);padding:14px;display:flex;gap:12px;align-items:flex-start;"><span style="font-size:20px;flex-shrink:0;">🪑</span><div><div style="font-size:15px;font-weight:800;color:var(--white);margin-bottom:3px;">Benches</div><div style="font-size:13px;color:rgba(248,248,240,.55);font-weight:600;line-height:1.7;">Tag: amenity = bench</div></div></div>
+      <div style="background:var(--night);padding:14px;display:flex;gap:12px;align-items:flex-start;"><span style="font-size:20px;flex-shrink:0;">🚲</span><div><div style="font-size:15px;font-weight:800;color:var(--white);margin-bottom:3px;">Bike racks</div><div style="font-size:13px;color:rgba(248,248,240,.55);font-weight:600;line-height:1.7;">Tag: amenity = bicycle_parking</div></div></div>
+      <div style="background:var(--night);padding:14px;display:flex;gap:12px;align-items:flex-start;"><span style="font-size:20px;flex-shrink:0;">🌳</span><div><div style="font-size:15px;font-weight:800;color:var(--white);margin-bottom:3px;">Trees + species</div><div style="font-size:13px;color:rgba(248,248,240,.55);font-weight:600;line-height:1.7;">Tag: natural = tree + species</div></div></div>
+      <div style="background:var(--night);padding:14px;display:flex;gap:12px;align-items:flex-start;"><span style="font-size:20px;flex-shrink:0;">🗑️</span><div><div style="font-size:15px;font-weight:800;color:var(--white);margin-bottom:3px;">Waste bins</div><div style="font-size:13px;color:rgba(248,248,240,.55);font-weight:600;line-height:1.7;">Tag: amenity = waste_basket</div></div></div>
+      <div style="background:var(--night);padding:14px;display:flex;gap:12px;align-items:flex-start;"><span style="font-size:20px;flex-shrink:0;">🚰</span><div><div style="font-size:15px;font-weight:800;color:var(--white);margin-bottom:3px;">Water fountains</div><div style="font-size:13px;color:rgba(248,248,240,.55);font-weight:600;line-height:1.7;">Tag: amenity = drinking_water</div></div></div>
+      <div style="background:var(--night);padding:14px;display:flex;gap:12px;align-items:flex-start;"><span style="font-size:20px;flex-shrink:0;">☕</span><div><div style="font-size:15px;font-weight:800;color:var(--white);margin-bottom:3px;">Cafes & shops</div><div style="font-size:13px;color:rgba(248,248,240,.55);font-weight:600;line-height:1.7;">Tag: amenity = cafe / shop = *</div></div></div>
+    </div>
+  </div>
+  <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap;">
+    <a href="https://www.openstreetmap.org/edit#map=16/38.5449/-121.7405" target="_blank" class="px-btn px-btn-green">▶ OPEN DAVIS IN OSM EDITOR</a>
+    <span style="font-size:14px;font-weight:700;color:rgba(248,248,240,.4);font-style:italic;">Opens in a new tab · sign in first to save your edits</span>
+  </div>
+
+  <!-- OSM Contributor Credit Claim -->
+  <div id="osm-claim" style="margin-top:48px;border-top:4px solid var(--stone-dark);padding-top:40px;">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:start;">
+      <div>
+        <div style="font-family:'Press Start 2P',monospace;font-size:10px;color:var(--gold);margin-bottom:14px;line-height:1.8;">✦ CLAIM YOUR CONTRIBUTOR CREDIT</div>
+        <h3 style="font-family:'Press Start 2P',monospace;font-size:18px;color:var(--white);line-height:1.5;margin-bottom:16px;">Made 10+ edits?<br>Get your name in-world.</h3>
+        <p style="font-size:15px;line-height:1.85;color:rgba(248,248,240,.7);font-weight:600;margin-bottom:12px;">Once you hit 10 changesets in the Davis area, submit your usernames below. We'll verify your edits against the OSM API and:</p>
+        <ul style="list-style:none;padding:0;margin:0 0 20px 0;">
+          <li style="font-size:14px;font-weight:700;color:var(--grass);margin-bottom:8px;padding-left:20px;position:relative;"><span style="position:absolute;left:0;">✓</span> Add you to the public contributors list on this page</li>
+          <li style="font-size:14px;font-weight:700;color:var(--grass);margin-bottom:8px;padding-left:20px;position:relative;"><span style="position:absolute;left:0;">✓</span> Place your Minecraft name on the credits wall at City Hall</li>
+          <li style="font-size:14px;font-weight:700;color:var(--grass);margin-bottom:8px;padding-left:20px;position:relative;"><span style="position:absolute;left:0;">✓</span> Grant early server access before public launch</li>
+        </ul>
+        <div style="background:rgba(92,164,75,.1);border-left:3px solid var(--grass);padding:10px 14px;font-size:13px;font-weight:700;color:rgba(248,248,240,.6);line-height:1.7;">Verification is automated — we check your edit count directly from the OSM API within 24 hours of submission.</div>
+      </div>
+      <div style="background:var(--night2);border:4px solid var(--stone-dark);padding:28px 28px;">
+        <div style="font-family:'Press Start 2P',monospace;font-size:10px;color:var(--white);margin-bottom:20px;line-height:1.6;">SUBMIT YOUR USERNAMES</div>
+        <form id="osm-claim-form" action="https://formspree.io/f/xeepvonk" method="POST" onsubmit="handleOsmSubmit(event)">
+          <div class="f-group" style="margin-bottom:16px;">
+            <label class="f-label" style="display:block;margin-bottom:6px;">OSM USERNAME</label>
+            <input class="f-input" type="text" name="osm_username" placeholder="Your OpenStreetMap username" required style="width:100%;box-sizing:border-box;">
+          </div>
+          <div class="f-group" style="margin-bottom:16px;">
+            <label class="f-label" style="display:block;margin-bottom:6px;">MINECRAFT USERNAME</label>
+            <input class="f-input" type="text" name="minecraft_username" placeholder="Your in-game username" required style="width:100%;box-sizing:border-box;">
+          </div>
+          <div class="f-group" style="margin-bottom:24px;">
+            <label class="f-label" style="display:block;margin-bottom:6px;">EMAIL <span style="color:rgba(248,248,240,.35);font-family:sans-serif;font-size:11px;font-weight:600;">(optional — for follow-up)</span></label>
+            <input class="f-input" type="email" name="email" placeholder="you@example.com" style="width:100%;box-sizing:border-box;">
+          </div>
+          <input type="hidden" name="_subject" value="BuildDavis OSM Contributor Claim">
+          <button class="f-submit" id="osm-submit-btn" type="submit" style="width:100%;">▶ CLAIM MY CREDIT</button>
+        </form>
+        <div id="osm-claim-success" style="display:none;text-align:center;padding:20px 0;">
+          <div style="font-size:32px;margin-bottom:12px;">🗺️</div>
+          <div style="font-family:'Press Start 2P',monospace;font-size:11px;color:var(--grass);line-height:1.8;margin-bottom:8px;">SUBMISSION RECEIVED</div>
+          <div style="font-size:14px;font-weight:600;color:rgba(248,248,240,.65);line-height:1.7;">We'll verify your edit count and add you to the contributors list within 24 hours.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TWO TRACKS -->
+<section class="tracks-section">
+  <div class="section-head">
+    <span class="section-tag">// CHOOSE YOUR ROLE</span>
+    <h2 class="section-title">TWO WAYS TO<br><span class="t-gold">CONTRIBUTE.</span></h2>
+  </div>
+  <div class="game-modes">
+    <div class="game-mode game-mode-survival" id="map">
+      <div class="mode-badge mode-badge-survival">SURVIVAL MODE</div>
+      <h3 class="mode-title">MAP<br>DAVIS</h3>
+      <div class="mode-subtitle">NO MINECRAFT NEEDED</div>
+      <p class="mode-desc">Add real-world detail to OpenStreetMap and it automatically appears in the generated world. Your bench, your bike rack, your tree — in the game forever.</p>
+      <ul class="mode-steps">
+        <li>Create a free OpenStreetMap account</li>
+        <li>Open the iD editor — we'll link you to Davis directly</li>
+        <li>Walk or bike a street, add what you see</li>
+        <li>Your edits appear in the world at next generation</li>
+      </ul>
+      <div class="reward-box"><strong>✦ YOUR REWARD</strong>10+ edits = priority early access to the contributor server before public launch.</div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;">
+        <a href="https://www.openstreetmap.org/edit#map=16/38.5449/-121.7405" target="_blank" class="px-btn px-btn-green">▶ OPEN OSM EDITOR</a>
+        <a href="https://discord.gg/Ujq724Evu5" target="_blank" class="px-btn" style="background:var(--sky);color:var(--white);box-shadow:0 6px 0 var(--sky-dark);">⌨ JOIN DISCORD</a>
+      </div>
+    </div>
+    <div class="game-mode game-mode-creative" id="build">
+      <div class="mode-badge mode-badge-creative">CREATIVE MODE</div>
+      <h3 class="mode-title">BUILD<br>DAVIS</h3>
+      <div class="mode-subtitle">MINECRAFT BUILDERS WANTED</div>
+      <p class="mode-desc">Join the contributor server and start building on the Build Davis Bedrock server. Claim a zone, get the style guide, and make your neighbourhood look exactly like the real thing.</p>
+      <ul class="mode-steps">
+        <li>Apply with your Minecraft username below</li>
+        <li>Get approved — we review every application personally</li>
+        <li>Join Discord and claim your neighbourhood zone</li>
+        <li>Start building on the Build Davis Bedrock server</li>
+      </ul>
+      <div class="reward-box"><strong>✦ YOUR REWARD</strong>Named contributor credit on a plaque at the train station and in all project documentation.</div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;">
+        <a href="#apply" class="px-btn px-btn-gold">✦ APPLY TO BUILD</a>
+        <a href="https://discord.gg/Ujq724Evu5" target="_blank" class="px-btn" style="background:var(--sky);color:var(--white);box-shadow:0 6px 0 var(--sky-dark);">⌨ JOIN DISCORD</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- APPLY -->
+<section class="apply-section" id="apply">
+  <div class="apply-left">
+    <h2>BUILD THE TOWN<br>YOU <em>KNOW.</em></h2>
+    <p>We're looking for contributors with a real connection to Davis — students, alumni, locals, or builders who care about making something accurate and lasting.</p>
+    <p>Every application is reviewed personally. We'd rather have 30 committed builders than 300 who never log on.</p>
+    <ul class="perk-list">
+      <li>Early access before public launch</li>
+      <li>Named credit on the in-world contributor plaque</li>
+      <li>Assigned zone — your neighbourhood, your build</li>
+      <li>Style guide and build reference materials</li>
+      <li>Discord community with other Davis builders</li>
+    </ul>
+  </div>
+  <div class="apply-form-wrap">
+    <div class="form-heading">APPLY FOR<br>BUILDER ACCESS</div>
+    <form id="form-inner" action="https://formspree.io/f/xreoyded" method="POST" onsubmit="handleSubmit(event)">
+      <div class="f-group">
+        <label class="f-label">YOUR NAME</label>
+        <input class="f-input" type="text" name="name" placeholder="First and last name" required>
+      </div>
+      <div class="f-group">
+        <label class="f-label">EMAIL ADDRESS</label>
+        <input class="f-input" type="email" name="email" placeholder="you@example.com" required>
+      </div>
+      <div class="f-group">
+        <label class="f-label">MINECRAFT USERNAME</label>
+        <input class="f-input" type="text" name="minecraft_username" placeholder="YourUsername" required>
+      </div>
+      <div class="f-group">
+        <label class="f-label">CONNECTION TO DAVIS</label>
+        <select class="f-select" name="connection_to_davis">
+          <option value="" disabled selected>SELECT ONE</option>
+          <option>Current UC Davis student</option>
+          <option>UC Davis alumni</option>
+          <option>Davis resident</option>
+          <option>Former Davis resident</option>
+          <option>Minecraft builder (no Davis connection)</option>
+          <option>Other</option>
+        </select>
+      </div>
+      <div class="f-group">
+        <label class="f-label">WHAT WOULD YOU MOST WANT TO BUILD?</label>
+        <textarea class="f-textarea" name="what_to_build" placeholder="The Arboretum, the Quad, my old street..."></textarea>
+      </div>
+      <input type="hidden" name="_subject" value="New Build Davis Application">
+      <input type="hidden" name="_next" value="">
+      <button class="f-submit" id="submit-btn" type="submit">▶ SUBMIT APPLICATION</button>
+    </form>
+    <div class="f-success" id="f-success">
+      <span class="f-success-icon">🎮</span>
+      <h3>THANK YOU FOR<br>YOUR INTEREST!</h3>
+      <p>We'll review your application and reach out by email.</p>
+    </div>
+  </div>
+</section>
+
+<!-- CREDITS -->
+<section id="credits" style="position:relative;z-index:1;background:var(--night);padding:64px 40px;border-bottom:4px solid var(--stone-dark);display:none;">
+  <div class="section-head" style="margin-bottom:32px;">
+    <span class="section-tag">// THE PEOPLE WHO MADE THIS</span>
+    <h2 class="section-title">Special thanks for <span class="t-gold">contributing.</span></h2>
+  </div>
+  <div id="credits-list" style="display:flex;flex-wrap:wrap;gap:12px;"></div>
+</section>
+
+<footer>
+  <div class="footer-logo">BUILD DAVIS<br>A MINECRAFT WORLD PROJECT</div>
+  <div class="footer-info">
+    Map data © <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap contributors</a> · ODbL<br>
+    USGS 3DEP · Overture Maps · City of Davis GIS · Chunker (Apache 2.0)<br>
+    <a href="https://builddavis.org/terms">Terms of Use</a> · <a href="https://builddavis.org/privacy">Privacy Policy</a><br>
+    Not affiliated with Mojang Studios, UC Davis, or the City of Davis
+  </div>
+</footer>
+
+<script>
+// Stars
+const sc = document.getElementById('stars');
+for(let i=0;i<80;i++){
+  const s=document.createElement('div');
+  s.className='star';
+  s.style.left=Math.random()*100+'%';
+  s.style.top=Math.random()*100+'%';
+  s.style.setProperty('--d',(2+Math.random()*4)+'s');
+  s.style.setProperty('--delay',(Math.random()*4)+'s');
+  s.style.opacity=Math.random()*.8+.2;
+  sc.appendChild(s);
+}
+
+// Scroll reveal
+const obs=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting)e.target.classList.add('visible')})},{threshold:.15});
+document.querySelectorAll('.how-card').forEach(c=>obs.observe(c));
+
+// Formspree submission — hides email, shows success state
+async function handleSubmit(e){
+  e.preventDefault();
+  const btn=document.getElementById('submit-btn');
+  btn.textContent='▶ SENDING...';
+  btn.disabled=true;
+  try{
+    const data=new FormData(e.target);
+    const res=await fetch(e.target.action,{method:'POST',body:data,headers:{'Accept':'application/json'}});
+    if(res.ok){
+      document.getElementById('form-inner').style.display='none';
+      document.getElementById('f-success').style.display='block';
+    } else {
+      btn.textContent='▶ ERROR — TRY AGAIN';
+      btn.disabled=false;
+    }
+  } catch {
+    btn.textContent='▶ ERROR — TRY AGAIN';
+    btn.disabled=false;
+  }
+}
+// OSM claim form submission
+async function handleOsmSubmit(e){
+  e.preventDefault();
+  const btn=document.getElementById('osm-submit-btn');
+  btn.textContent='▶ SUBMITTING...';
+  btn.disabled=true;
+  try{
+    const data=new FormData(e.target);
+    const res=await fetch(e.target.action,{method:'POST',body:data,headers:{'Accept':'application/json'}});
+    if(res.ok){
+      document.getElementById('osm-claim-form').style.display='none';
+      document.getElementById('osm-claim-success').style.display='block';
+    } else {
+      btn.textContent='▶ ERROR — TRY AGAIN';
+      btn.disabled=false;
+    }
+  } catch {
+    btn.textContent='▶ ERROR — TRY AGAIN';
+    btn.disabled=false;
+  }
+}
+
+// Load contributors from credits.json and render #credits section
+(async function loadCredits(){
+  const CREDITS_URL='https://raw.githubusercontent.com/coopdogGGs/builddavis-engine/main/data/credits.json';
+  try{
+    const res=await fetch(CREDITS_URL);
+    if(!res.ok) return;
+    const credits=await res.json();
+    if(!Array.isArray(credits)||credits.length===0) return;
+    const section=document.getElementById('credits');
+    const list=document.getElementById('credits-list');
+    credits.forEach(c=>{
+      if(!c.minecraft_username) return;
+      const chip=document.createElement('div');
+      chip.style.cssText='background:var(--night2);border:3px solid var(--stone-dark);padding:10px 16px;font-family:"Press Start 2P",monospace;font-size:10px;color:var(--white);line-height:1.4;';
+      const icon=c.type==='osm'?'🗺️':'🏗️';
+      chip.textContent=icon+' '+c.minecraft_username;
+      chip.title=c.type==='osm'?('OSM: '+c.osm_username||c.minecraft_username):('Builder'+( c.zone ? ' · '+c.zone :''));
+      list.appendChild(chip);
+    });
+    section.style.display='block';
+  } catch(err){
+    // Silently fail — credits section stays hidden
+  }
+})();
+</script>
