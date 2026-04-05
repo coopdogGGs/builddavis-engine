@@ -1,0 +1,21 @@
+# Backups (large zip files)
+backups/
+
+# Manifests (per-run snapshots — local only)
+manifests/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# LiDAR (large, regenerable from USGS cache)
+data/*.tif
+data/*.laz
+
+# Credentials — never commit
+.env
+
+# OS
+.DS_Store
+Thumbs.db
