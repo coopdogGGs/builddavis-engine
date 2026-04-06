@@ -1,0 +1,41 @@
+name: Verify OSM Contributor
+
+on:
+  workflow_dispatch:
+    inputs:
+      osm_username:
+        description: 'OSM username (from form submission)'
+        required: true
+      minecraft_username:
+        description: 'Minecraft username (from form submission)'
+        required: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Verify OSM contributor
+        run: |
+          python Code/verify_osm_contributor.py \
+            --osm "${{ github.event.inputs.osm_username }}" \
+            --minecraft "${{ github.event.inputs.minecraft_username }}"
+
+      - name: Commit and push credits.json
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/credits.json
+          git diff --cached --quiet || git commit -m "credit: add ${{ github.event.inputs.minecraft_username }}"
+          git push
