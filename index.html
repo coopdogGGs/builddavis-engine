@@ -1161,7 +1161,7 @@ footer {
       <div style="font-family:'Press Start 2P',monospace;font-size:28px;color:var(--grass);text-shadow:2px 2px 0 var(--grass-dark);display:block;margin-bottom:14px;">04</div>
       <div style="font-family:'Press Start 2P',monospace;font-size:10px;color:var(--white);margin-bottom:12px;line-height:1.8;">It appears in the world</div>
       <div style="font-size:14px;line-height:1.85;color:rgba(248,248,240,.65);font-weight:600;margin-bottom:12px;">At our next generation run, your edit is pulled in automatically. Your bench becomes a stone slab on a fence post — exactly where you placed it.</div>
-      <div style="background:rgba(240,192,64,.12);border-left:3px solid var(--gold);padding:8px 10px;font-size:13px;font-weight:700;color:var(--gold);line-height:1.6;">10+ edits = early server access</div>
+      <div style="background:rgba(240,192,64,.12);border-left:3px solid var(--gold);padding:8px 10px;font-size:13px;font-weight:700;color:var(--gold);line-height:1.6;">10+ edits = a special thanks in the credits</div>
     </div>
   </div>
   <div style="background:var(--night2);border:4px solid var(--sky-dark);padding:24px 28px;margin-bottom:32px;">
@@ -1178,47 +1178,6 @@ footer {
   <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap;">
     <a href="https://www.openstreetmap.org/edit#map=16/38.5449/-121.7405" target="_blank" class="px-btn px-btn-green">▶ OPEN DAVIS IN OSM EDITOR</a>
     <span style="font-size:14px;font-weight:700;color:rgba(248,248,240,.4);font-style:italic;">Opens in a new tab · sign in first to save your edits</span>
-  </div>
-
-  <!-- OSM Contributor Credit Claim -->
-  <div id="osm-claim" style="margin-top:48px;border-top:4px solid var(--stone-dark);padding-top:40px;">
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:start;">
-      <div>
-        <div style="font-family:'Press Start 2P',monospace;font-size:10px;color:var(--gold);margin-bottom:14px;line-height:1.8;">✦ CLAIM YOUR CONTRIBUTOR CREDIT</div>
-        <h3 style="font-family:'Press Start 2P',monospace;font-size:18px;color:var(--white);line-height:1.5;margin-bottom:16px;">Made 10+ edits?<br>Get your name in-world.</h3>
-        <p style="font-size:15px;line-height:1.85;color:rgba(248,248,240,.7);font-weight:600;margin-bottom:12px;">Once you hit 10 changesets in the Davis area, submit your usernames below. We'll verify your edits against the OSM API and:</p>
-        <ul style="list-style:none;padding:0;margin:0 0 20px 0;">
-          <li style="font-size:14px;font-weight:700;color:var(--grass);margin-bottom:8px;padding-left:20px;position:relative;"><span style="position:absolute;left:0;">✓</span> Add you to the public contributors list on this page</li>
-          <li style="font-size:14px;font-weight:700;color:var(--grass);margin-bottom:8px;padding-left:20px;position:relative;"><span style="position:absolute;left:0;">✓</span> Place your Minecraft name on the credits wall at City Hall</li>
-          <li style="font-size:14px;font-weight:700;color:var(--grass);margin-bottom:8px;padding-left:20px;position:relative;"><span style="position:absolute;left:0;">✓</span> Grant early server access before public launch</li>
-        </ul>
-        <div style="background:rgba(92,164,75,.1);border-left:3px solid var(--grass);padding:10px 14px;font-size:13px;font-weight:700;color:rgba(248,248,240,.6);line-height:1.7;">Verification is automated — we check your edit count directly from the OSM API within 24 hours of submission.</div>
-      </div>
-      <div style="background:var(--night2);border:4px solid var(--stone-dark);padding:28px 28px;">
-        <div style="font-family:'Press Start 2P',monospace;font-size:10px;color:var(--white);margin-bottom:20px;line-height:1.6;">SUBMIT YOUR USERNAMES</div>
-        <form id="osm-claim-form" action="https://formspree.io/f/xeepvonk" method="POST" onsubmit="handleOsmSubmit(event)">
-          <div class="f-group" style="margin-bottom:16px;">
-            <label class="f-label" style="display:block;margin-bottom:6px;">OSM USERNAME</label>
-            <input class="f-input" type="text" name="osm_username" placeholder="Your OpenStreetMap username" required style="width:100%;box-sizing:border-box;">
-          </div>
-          <div class="f-group" style="margin-bottom:16px;">
-            <label class="f-label" style="display:block;margin-bottom:6px;">MINECRAFT USERNAME</label>
-            <input class="f-input" type="text" name="minecraft_username" placeholder="Your in-game username" required style="width:100%;box-sizing:border-box;">
-          </div>
-          <div class="f-group" style="margin-bottom:24px;">
-            <label class="f-label" style="display:block;margin-bottom:6px;">EMAIL <span style="color:rgba(248,248,240,.35);font-family:sans-serif;font-size:11px;font-weight:600;">(optional — for follow-up)</span></label>
-            <input class="f-input" type="email" name="email" placeholder="you@example.com" style="width:100%;box-sizing:border-box;">
-          </div>
-          <input type="hidden" name="_subject" value="BuildDavis OSM Contributor Claim">
-          <button class="f-submit" id="osm-submit-btn" type="submit" style="width:100%;">▶ CLAIM MY CREDIT</button>
-        </form>
-        <div id="osm-claim-success" style="display:none;text-align:center;padding:20px 0;">
-          <div style="font-size:32px;margin-bottom:12px;">🗺️</div>
-          <div style="font-family:'Press Start 2P',monospace;font-size:11px;color:var(--grass);line-height:1.8;margin-bottom:8px;">SUBMISSION RECEIVED</div>
-          <div style="font-size:14px;font-weight:600;color:rgba(248,248,240,.65);line-height:1.7;">We'll verify your edit count and add you to the contributors list within 24 hours.</div>
-        </div>
-      </div>
-    </div>
   </div>
 </section>
 
@@ -1240,7 +1199,7 @@ footer {
         <li>Walk or bike a street, add what you see</li>
         <li>Your edits appear in the world at next generation</li>
       </ul>
-      <div class="reward-box"><strong>✦ YOUR REWARD</strong>10+ edits = priority early access to the contributor server before public launch.</div>
+      <div class="reward-box">10+ edits = a special thanks in the credits</div>
       <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;">
         <a href="https://www.openstreetmap.org/edit#map=16/38.5449/-121.7405" target="_blank" class="px-btn px-btn-green">▶ OPEN OSM EDITOR</a>
         <a href="https://discord.gg/Ujq724Evu5" target="_blank" class="px-btn" style="background:var(--sky);color:var(--white);box-shadow:0 6px 0 var(--sky-dark);">⌨ JOIN DISCORD</a>
@@ -1414,12 +1373,13 @@ async function handleOsmSubmit(e){
     const section=document.getElementById('credits');
     const list=document.getElementById('credits-list');
     credits.forEach(c=>{
-      if(!c.minecraft_username) return;
+      const displayName=c.name||c.minecraft_username;
+      if(!displayName) return;
       const chip=document.createElement('div');
       chip.style.cssText='background:var(--night2);border:3px solid var(--stone-dark);padding:10px 16px;font-family:"Press Start 2P",monospace;font-size:10px;color:var(--white);line-height:1.4;';
       const icon=c.type==='osm'?'🗺️':'🏗️';
-      chip.textContent=icon+' '+c.minecraft_username;
-      chip.title=c.type==='osm'?('OSM: '+c.osm_username||c.minecraft_username):('Builder'+( c.zone ? ' · '+c.zone :''));
+      chip.textContent=icon+' '+displayName;
+      chip.title=c.type==='osm'?('OSM mapper'+(c.osm_username?' · '+c.osm_username:'')):('Builder'+(c.zone?' · '+c.zone:''));
       list.appendChild(chip);
     });
     section.style.display='block';
