@@ -267,6 +267,37 @@ nav {
   opacity: 0; animation: fadeIn .4s .7s forwards;
 }
 
+/* ── MINECRAFT SPLASH TEXT ── */
+.mc-splash {
+  position: absolute;
+  top: 16%;
+  left: 67%;
+  transform: translateX(-50%) rotate(-18deg) scale(1);
+  z-index: 10;
+  font-family: 'Press Start 2P', monospace;
+  font-size: clamp(18px, 2.4vw, 30px);
+  color: #FFFF55;
+  text-shadow:
+    3px 3px 0 #AAAA00,
+    -1px -1px 0 #888800,
+    1px -1px 0 #888800,
+    -1px  1px 0 #888800;
+  white-space: nowrap;
+  pointer-events: none;
+  animation: splashPop .5s 1.4s cubic-bezier(.36,.07,.19,.97) both, splashBounce 1.6s 1.9s ease-in-out infinite;
+  opacity: 0;
+}
+@keyframes splashPop {
+  0%   { opacity:0; transform: translateX(-50%) rotate(-18deg) scale(.4); }
+  60%  { opacity:1; transform: translateX(-50%) rotate(-18deg) scale(1.18); }
+  80%  { transform: translateX(-50%) rotate(-18deg) scale(.95); }
+  100% { opacity:1; transform: translateX(-50%) rotate(-18deg) scale(1); }
+}
+@keyframes splashBounce {
+  0%,100% { transform: translateX(-50%) rotate(-18deg) scale(1); }
+  50%      { transform: translateX(-50%) rotate(-18deg) scale(1.08); }
+}
+
 /* Pixel buttons */
 .px-btn {
   font-family: 'Press Start 2P', monospace;
@@ -751,6 +782,7 @@ footer {
   /* Hero */
   .hero { padding:40px 20px 60px; min-height:auto; }
   .iso-station { display:none; }
+  .mc-splash { top:auto; bottom:28%; left:50%; font-size:clamp(14px,5vw,20px); }
   .hero-title { font-size:clamp(28px,9vw,52px) !important; }
   .hero-sub { font-size:clamp(11px,3.5vw,16px); }
   .hero-desc { font-size:16px; }
@@ -829,6 +861,7 @@ footer {
 <!-- HERO -->
 <section class="hero">
   <div class="hero-bg"></div>
+  <div class="mc-splash">Launching soon!</div>
   <div class="hero-content">
     <div class="hero-tag">NEW WORLD GENERATING...</div>
     <div class="hero-title">
