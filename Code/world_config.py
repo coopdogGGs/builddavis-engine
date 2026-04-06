@@ -81,4 +81,4 @@ def geo_to_mc(lat: float, lon: float) -> tuple[int, int]:
 # ── OSM query bbox (wider than world — covers all of Davis) ──────────────────
 
 OSM_DAVIS_BBOX = "-121.80,38.51,-121.69,38.59"   # west,south,east,north
-OSM_MIN_CHANGESETS = 1                             # threshold for credits (TEST: set back to 10)
+OSM_MIN_CHANGESETS = 10                            # minimum changesets in Davis bbox to earn credit
