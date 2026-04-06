@@ -86,16 +86,16 @@ def already_credited(osm_username: str) -> bool:
     )
 
 
-def append_credit(osm_username: str, mc_username: str) -> None:
+def append_credit(osm_username: str, display_name: str) -> None:
     """Add the contributor to data/credits.json."""
     if not CREDITS_JSON.exists():
         CREDITS_JSON.write_text("[]", encoding="utf-8")
     credits = json.loads(CREDITS_JSON.read_text(encoding="utf-8"))
     credits.append({
-        "minecraft_username": mc_username,
-        "osm_username":       osm_username,
-        "date_verified":      date.today().isoformat(),
-        "type":               "osm"
+        "name":          display_name,
+        "osm_username":  osm_username,
+        "date_verified": date.today().isoformat(),
+        "type":          "osm"
     })
     CREDITS_JSON.write_text(
         json.dumps(credits, indent=2, ensure_ascii=False),
@@ -107,14 +107,14 @@ def main():
     parser = argparse.ArgumentParser(
         description="Verify an OSM contributor and add them to the credits list."
     )
-    parser.add_argument("--osm",       required=True, metavar="OSM_USERNAME",
+    parser.add_argument("--osm",  required=True, metavar="OSM_USERNAME",
                         help="OpenStreetMap username")
-    parser.add_argument("--minecraft", required=True, metavar="MC_USERNAME",
-                        help="Minecraft username")
+    parser.add_argument("--name", required=False, metavar="DISPLAY_NAME",
+                        help="Display name for credits (defaults to OSM username)")
     args = parser.parse_args()
 
-    osm_user = args.osm.strip()
-    mc_user  = args.minecraft.strip()
+    osm_user  = args.osm.strip()
+    mc_user   = (args.name or args.osm).strip()  # reuse variable name for compat
 
     # ── Already credited? ──────────────────────────────────────────────────
     if already_credited(osm_user):
@@ -128,7 +128,7 @@ def main():
     if count >= OSM_MIN_CHANGESETS:
         append_credit(osm_user, mc_user)
         print(f"[PASS] {osm_user} has {count} changeset(s) — added to credits.json as '{mc_user}'.")
-        print("       Run 'python Code\\update_credits_plaque.py' to refresh the in-world plaque.")
+        print("       Run 'python Code\\update_credits_plaque.py' to refresh the in-world sign.")
     else:
         print(
             f"[FAIL] {osm_user} has only {count} changeset(s) in Davis "

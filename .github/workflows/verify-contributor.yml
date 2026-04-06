@@ -4,17 +4,24 @@ on:
   workflow_dispatch:
     inputs:
       osm_username:
-        description: 'OSM username (from form submission)'
+        description: 'OSM username'
         required: true
-      minecraft_username:
-        description: 'Minecraft username (from form submission)'
-        required: true
+      display_name:
+        description: 'Display name for credits (defaults to OSM username)'
+        required: false
+  issues:
+    types: [opened]
 
 jobs:
   verify:
     runs-on: ubuntu-latest
+    # For issue trigger: only run when labeled osm-credit
+    if: |
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'issues' && contains(github.event.issue.labels.*.name, 'osm-credit'))
     permissions:
       contents: write
+      issues: write
 
     steps:
       - uses: actions/checkout@v4
@@ -26,16 +33,84 @@ jobs:
       - name: Install dependencies
         run: pip install requests
 
-      - name: Verify OSM contributor
+      - name: Parse inputs
+        id: inputs
         run: |
+          if [ "${{ github.event_name }}" = "issues" ]; then
+            # Extract fields from GitHub issue body (template generates ### Heading\n\nvalue)
+            BODY="${{ github.event.issue.body }}"
+            OSM=$(python3 -c "
+          import sys, re
+          body = sys.stdin.read()
+          m = re.search(r'###\s*OSM Username\s*\n+(.+)', body)
+          print(m.group(1).strip() if m else '')
+          " <<< "$BODY")
+            NAME=$(python3 -c "
+          import sys, re
+          body = sys.stdin.read()
+          m = re.search(r'###\s*Display Name\s*\n+(.+)', body)
+          print(m.group(1).strip() if m else '')
+          " <<< "$BODY")
+          else
+            OSM="${{ github.event.inputs.osm_username }}"
+            NAME="${{ github.event.inputs.display_name }}"
+          fi
+
+          echo "osm_username=$OSM" >> $GITHUB_OUTPUT
+          echo "display_name=${NAME:-$OSM}" >> $GITHUB_OUTPUT
+
+      - name: Verify OSM contributor
+        id: verify
+        run: |
+          set +e
           python Code/verify_osm_contributor.py \
-            --osm "${{ github.event.inputs.osm_username }}" \
-            --minecraft "${{ github.event.inputs.minecraft_username }}"
+            --osm "${{ steps.inputs.outputs.osm_username }}" \
+            --name "${{ steps.inputs.outputs.display_name }}"
+          EXIT=$?
+          echo "exit_code=$EXIT" >> $GITHUB_OUTPUT
+          exit $EXIT
 
       - name: Commit and push credits.json
+        if: steps.verify.outputs.exit_code == '0'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add data/credits.json
-          git diff --cached --quiet || git commit -m "credit: add ${{ github.event.inputs.minecraft_username }}"
+          git diff --cached --quiet || git commit -m "credit: add ${{ steps.inputs.outputs.display_name }}"
           git push
+
+      - name: Comment and close issue (pass)
+        if: github.event_name == 'issues' && steps.verify.outputs.exit_code == '0'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: `✅ Verified! **${{ steps.inputs.outputs.display_name }}** has been added to the [BuildDavis credits](https://builddavis.org/#credits). Thanks for mapping Davis! 🗺️`
+            });
+            await github.rest.issues.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              state: 'closed'
+            });
+
+      - name: Comment and close issue (fail)
+        if: github.event_name == 'issues' && steps.verify.outputs.exit_code != '0'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: `❌ Couldn't verify 10+ changesets in the Davis area for **${{ steps.inputs.outputs.osm_username }}**. Make sure your OSM username is spelled exactly right (case-sensitive). If you're sure your edits qualify, ping @coopdogGGs.`
+            });
+            await github.rest.issues.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              state: 'closed'
+            });
