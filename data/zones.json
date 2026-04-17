@@ -1,0 +1,122 @@
+[
+  {
+    "id": "downtown",
+    "name": "Downtown Davis",
+    "description": "Historic downtown core — 2nd/3rd St corridor, City Hall, Farmers Market",
+    "bbox": [38.541, -121.743, 38.547, -121.735],
+    "assignee": null,
+    "assigned_date": null
+  },
+  {
+    "id": "central_davis",
+    "name": "Central Davis",
+    "description": "Residential grid between downtown and I-80 — F/G/H streets",
+    "bbox": [38.547, -121.743, 38.553, -121.735],
+    "assignee": null,
+    "assigned_date": null
+  },
+  {
+    "id": "campus_quad",
+    "name": "UC Davis Central Quad",
+    "description": "Main UC Davis campus core — Mrak Hall, Shields Library, Memorial Union",
+    "bbox": [38.538, -121.752, 38.544, -121.743],
+    "assignee": null,
+    "assigned_date": null
+  },
+  {
+    "id": "campus_west",
+    "name": "UC Davis West Campus",
+    "description": "West campus — Mondavi Center, barn area, Hutchison Field",
+    "bbox": [38.537, -121.763, 38.544, -121.752],
+    "assignee": null,
+    "assigned_date": null
+  },
+  {
+    "id": "campus_south",
+    "name": "UC Davis South Campus",
+    "description": "South campus — student housing, South Hall, Tercero dorms",
+    "bbox": [38.531, -121.758, 38.538, -121.744],
+    "assignee": null,
+    "assigned_date": null
+  },
+  {
+    "id": "arboretum",
+    "name": "UC Davis Arboretum",
+    "description": "Arboretum waterway, Putah Creek, Lake Spafford",
+    "bbox": [38.534, -121.758, 38.540, -121.736],
+    "assignee": null,
+    "assigned_date": null
+  },
+  {
+    "id": "north_davis",
+    "name": "North Davis",
+    "description": "North of Covell Blvd — Covell Commons, Nugget, North Davis neighborhoods",
+    "bbox": [38.560, -121.760, 38.570, -121.740],
+    "assignee": null,
+    "assigned_date": null
+  },
+  {
+    "id": "south_davis",
+    "name": "South Davis",
+    "description": "South Davis neighborhoods — Mace Ranch, Wildhorse, East Covell",
+    "bbox": [38.525, -121.740, 38.534, -121.720],
+    "assignee": null,
+    "assigned_date": null
+  },
+  {
+    "id": "east_davis",
+    "name": "East Davis",
+    "description": "East Davis — Mace Ranch, Anderson Road corridor, grocery area",
+    "bbox": [38.536, -121.726, 38.547, -121.710],
+    "assignee": null,
+    "assigned_date": null
+  },
+  {
+    "id": "campus_village",
+    "name": "Campus Village",
+    "description": "Student housing dense zone — Solano Park, Cuarto, Segundo dorms",
+    "bbox": [38.544, -121.762, 38.552, -121.749],
+    "assignee": null,
+    "assigned_date": null
+  },
+  {
+    "id": "village_homes",
+    "name": "Village Homes",
+    "description": "Iconic passive solar planned community, west Davis",
+    "bbox": [38.539, -121.775, 38.548, -121.763],
+    "assignee": null,
+    "assigned_date": null
+  },
+  {
+    "id": "old_east_davis",
+    "name": "Old East Davis",
+    "description": "Central-east residential — E Street, F Street, UC neighborhoods",
+    "bbox": [38.544, -121.741, 38.553, -121.727],
+    "assignee": null,
+    "assigned_date": null
+  },
+  {
+    "id": "south_campus",
+    "name": "South Campus / Olive Drive",
+    "description": "I-80 edge, Olive Drive business strip, train tracks corridor",
+    "bbox": [38.528, -121.749, 38.534, -121.735],
+    "assignee": null,
+    "assigned_date": null
+  },
+  {
+    "id": "central_park",
+    "name": "Community Park / Mace Ranch",
+    "description": "Southeast Davis athletic fields, Mace Ranch, Mace Blvd area",
+    "bbox": [38.527, -121.728, 38.537, -121.714],
+    "assignee": null,
+    "assigned_date": null
+  },
+  {
+    "id": "northwest_davis",
+    "name": "Northwest Davis",
+    "description": "Northwest neighborhoods — Stonegate, Patwin, Covell Park area",
+    "bbox": [38.553, -121.775, 38.565, -121.755],
+    "assignee": null,
+    "assigned_date": null
+  }
+]

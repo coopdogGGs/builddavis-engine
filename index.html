@@ -1,0 +1,1367 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Build Davis — Minecraft World Project</title>
+<link rel="canonical" href="https://builddavis.org/">
+<meta property="og:title" content="Build Davis — Minecraft World Project">
+<meta property="og:description" content="The entire city of Davis, CA — rebuilt block by block in Minecraft.">
+<meta property="og:url" content="https://builddavis.org/">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://builddavis.org/assets/screenshots/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://builddavis.org/assets/screenshots/og.png">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src https://formspree.io https://raw.githubusercontent.com; img-src 'self' data: https:;">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --sky: #5B8DD9;
+  --sky-dark: #2D5FA6;
+  --grass: #5CA44B;
+  --grass-dark: #3A7A2D;
+  --dirt: #8B6348;
+  --stone: #8A8A8A;
+  --stone-dark: #4A4A4A;
+  --gold: #F0C040;
+  --gold-dark: #C89A10;
+  --night: #1A1F2E;
+  --night2: #242B3D;
+  --night3: #2F3850;
+  --white: #F8F8F0;
+  --red: #C84040;
+  --emerald: #20C060;
+  --pixel: 4px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; image-rendering: pixelated; overflow-x: hidden; width: 100%; }
+
+body {
+  font-family: 'Nunito', sans-serif;
+  background: var(--night);
+  color: var(--white);
+  overflow-x: hidden;
+  width: 100%;
+  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16'%3E%3Crect width='4' height='4' fill='%23F0C040'/%3E%3Crect x='4' width='8' height='4' fill='%23F0C040'/%3E%3Crect x='12' width='4' height='4' fill='%23F0C040'/%3E%3Crect y='4' width='4' height='8' fill='%23F0C040'/%3E%3Crect x='12' y='4' width='4' height='8' fill='%23F0C040'/%3E%3Crect y='12' width='4' height='4' fill='%23F0C040'/%3E%3Crect x='4' y='12' width='8' height='4' fill='%23F0C040'/%3E%3Crect x='12' y='12' width='4' height='4' fill='%23F0C040'/%3E%3C/svg%3E") 8 8, crosshair;
+}
+
+/* ── PIXEL BORDER MIXIN ── */
+.pixel-box {
+  box-shadow:
+    0 -4px 0 0 #000,
+    0 4px 0 0 #000,
+    -4px 0 0 0 #000,
+    4px 0 0 0 #000;
+}
+
+/* ── OVERFLOW GUARD ── */
+section { max-width: 100%; overflow-x: hidden; }
+
+/* ── STARS ── */
+.stars {
+  position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  overflow: hidden;
+}
+.star {
+  position: absolute;
+  width: 4px; height: 4px;
+  background: var(--white);
+  animation: twinkle var(--d, 3s) infinite var(--delay, 0s);
+}
+@keyframes twinkle {
+  0%,100% { opacity: 1; }
+  50% { opacity: .2; }
+}
+
+/* ── NAV ── */
+nav {
+  position: relative; z-index: 100;
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 20px 40px;
+  border-bottom: 4px solid var(--stone-dark);
+  background: var(--night);
+}
+.nav-logo {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 18px;
+  word-break: break-word;
+  color: var(--gold);
+  text-shadow: 3px 3px 0 var(--gold-dark);
+  line-height: 1.4;
+}
+.nav-logo span { display: block; font-size: 11px; color: var(--grass); text-shadow: 1px 1px 0 var(--grass-dark); margin-top: 6px; }
+.nav-links { display: flex; gap: 24px; list-style: none; }
+.nav-links a {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 11px;
+  color: var(--stone);
+  text-decoration: none;
+  padding: 8px 12px;
+  transition: color .1s, background .1s;
+}
+.nav-links a:hover { color: var(--gold); background: var(--night2); }
+
+/* Discord button */
+.nav-discord {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 9px;
+  padding: 9px 16px;
+  background: #5865F2;
+  color: var(--white);
+  text-decoration: none;
+  display: inline-block;
+  box-shadow: 0 4px 0 #3b4ad4;
+  transition: transform .1s, background .1s;
+  flex-shrink: 0;
+}
+.nav-discord:hover { background: #6b77f5; transform: translateY(-2px); }
+.nav-discord:active { transform: translateY(2px); box-shadow: 0 2px 0 #3b4ad4; }
+
+/* ── HERO STATS ── */
+.hero-right {
+  position: absolute;
+  right: 60px; top: 50%;
+  transform: translateY(-50%);
+  z-index: 5;
+  width: 430px;
+  max-width: calc(100vw - 120px);
+  background: rgba(14,18,28,.88);
+  border: 3px solid #3A4060;
+  box-shadow: 0 0 0 1px rgba(255,255,255,.06), inset 0 1px 0 rgba(255,255,255,.06), 6px 6px 0 rgba(0,0,0,.5);
+  opacity: 0; animation: fadeIn .4s 1.0s forwards;
+}
+.hero-right-title {
+  background: rgba(26,34,54,.95);
+  border-bottom: 2px solid #3A4060;
+  padding: 14px 18px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 10px;
+  color: var(--gold);
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+.hero-stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+}
+.hero-stat {
+  padding: 20px 22px;
+  border-right: 1px solid rgba(255,255,255,.08);
+  border-bottom: 1px solid rgba(255,255,255,.08);
+  transition: background .15s;
+}
+.hero-stat:hover { background: rgba(240,192,64,.08); }
+.hero-stat:nth-child(even) { border-right: none; }
+.hero-stat-num {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 26px;
+  color: var(--gold);
+  text-shadow: 2px 2px 0 rgba(0,0,0,.6);
+  line-height: 1;
+}
+.hero-stat-label {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 8px;
+  color: rgba(248,248,240,.45);
+  line-height: 1.8;
+  margin-top: 7px;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+.hero-stat-icon {
+  font-size: 22px;
+  margin-bottom: 8px;
+  line-height: 1;
+  display: block;
+}
+
+/* ── HERO ── */
+.hero {
+  position: relative; z-index: 1;
+  min-height: 90vh;
+  display: flex; flex-direction: column;
+  justify-content: center; align-items: flex-start;
+  padding: 60px 40px;
+  overflow: hidden;
+}
+
+/* Pixelated sky background */
+.hero-bg {
+  position: absolute; inset: 0;
+  background: var(--night);
+  z-index: 0;
+}
+.hero-bg::before {
+  content: '';
+  position: absolute; inset: 0;
+  background:
+    repeating-linear-gradient(0deg, transparent 0 31px, rgba(255,255,255,.015) 31px 32px),
+    repeating-linear-gradient(90deg, transparent 0 31px, rgba(255,255,255,.015) 31px 32px);
+}
+
+/* Pixel isometric station */
+.iso-station {
+  position: absolute;
+  right: 40px; bottom: 40px;
+  width: 440px; height: 280px;
+  opacity: 0;
+  animation: fadeIn .4s 1.2s forwards;
+}
+
+/* ── PIXEL GROUND STRIP ── */
+.ground {
+  display: flex; align-items: flex-end;
+  position: absolute; bottom: 0; left: 0; right: 0;
+  height: 80px;
+  z-index: 2;
+  overflow: hidden;
+}
+.ground-block {
+  flex-shrink: 0;
+  image-rendering: pixelated;
+}
+
+.hero-content { position: relative; z-index: 5; max-width: 680px; }
+
+.hero-tag {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 9px;
+  color: var(--emerald);
+  margin-bottom: 24px;
+  display: flex; align-items: center; gap: 12px;
+  opacity: 0; animation: fadeIn .3s .2s forwards;
+}
+.hero-tag::before {
+  content: '▶';
+  color: var(--gold);
+  font-size: 10px;
+}
+
+.hero-title {
+  font-family: 'Press Start 2P', monospace;
+  font-size: clamp(28px, 4.5vw, 52px);
+  line-height: 1.4;
+  margin-bottom: 8px;
+  opacity: 0; animation: pixelReveal .5s .3s forwards;
+}
+.hero-title .t-white { color: var(--white); text-shadow: 4px 4px 0 #000; }
+.hero-title .t-gold  { color: var(--gold);  text-shadow: 4px 4px 0 var(--gold-dark); }
+.hero-title .t-green { color: var(--grass);  text-shadow: 4px 4px 0 var(--grass-dark); }
+
+.hero-sub {
+  font-family: 'Press Start 2P', monospace;
+  font-size: clamp(12px, 1.8vw, 18px);
+  color: var(--sky);
+  text-shadow: 2px 2px 0 var(--sky-dark);
+  margin-bottom: 32px;
+  line-height: 1.6;
+  opacity: 0; animation: fadeIn .4s .5s forwards;
+}
+
+.hero-desc {
+  font-size: 17px;
+  line-height: 1.8;
+  color: rgba(248,248,240,.75);
+  font-weight: 600;
+  max-width: 520px;
+  margin-bottom: 40px;
+  opacity: 0; animation: fadeIn .4s .6s forwards;
+}
+
+.hero-btns {
+  display: flex; gap: 16px; flex-wrap: wrap;
+  opacity: 0; animation: fadeIn .4s .7s forwards;
+}
+
+/* ── MINECRAFT SPLASH TEXT ── */
+.mc-splash {
+  position: absolute;
+  top: 16%;
+  left: 67%;
+  transform: translateX(-50%) rotate(-18deg) scale(1);
+  z-index: 10;
+  font-family: 'Press Start 2P', monospace;
+  font-size: clamp(18px, 2.4vw, 30px);
+  color: #FFFF55;
+  text-shadow:
+    3px 3px 0 #AAAA00,
+    -1px -1px 0 #888800,
+    1px -1px 0 #888800,
+    -1px  1px 0 #888800;
+  white-space: nowrap;
+  pointer-events: none;
+  animation: splashPop .5s 1.4s cubic-bezier(.36,.07,.19,.97) both, splashBounce 1.6s 1.9s ease-in-out infinite;
+  opacity: 0;
+}
+@keyframes splashPop {
+  0%   { opacity:0; transform: translateX(-50%) rotate(-18deg) scale(.4); }
+  60%  { opacity:1; transform: translateX(-50%) rotate(-18deg) scale(1.18); }
+  80%  { transform: translateX(-50%) rotate(-18deg) scale(.95); }
+  100% { opacity:1; transform: translateX(-50%) rotate(-18deg) scale(1); }
+}
+@keyframes splashBounce {
+  0%,100% { transform: translateX(-50%) rotate(-18deg) scale(1); }
+  50%      { transform: translateX(-50%) rotate(-18deg) scale(1.08); }
+}
+
+/* Pixel buttons */
+.px-btn {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 10px;
+  padding: 16px 24px;
+  text-decoration: none;
+  display: inline-block;
+  cursor: pointer;
+  border: none;
+  line-height: 1.4;
+  transition: transform .1s;
+  position: relative;
+}
+.px-btn:active { transform: translateY(2px); }
+
+.px-btn-green {
+  background: var(--grass);
+  color: var(--white);
+  box-shadow: 0 6px 0 var(--grass-dark), 4px 0 0 rgba(255,255,255,.2) inset, 0 4px 0 rgba(255,255,255,.15) inset;
+}
+.px-btn-green:hover { background: #6DC45B; }
+
+.px-btn-gold {
+  background: var(--gold);
+  color: var(--night);
+  box-shadow: 0 6px 0 var(--gold-dark), 4px 0 0 rgba(255,255,255,.3) inset, 0 4px 0 rgba(255,255,255,.2) inset;
+}
+.px-btn-gold:hover { background: #F8D060; }
+
+/* ── DAVISVILLE SIGN SECTION ── */
+.spawn-section {
+  position: relative; z-index: 1;
+  background: var(--night2);
+  border-top: 4px solid var(--stone-dark);
+  border-bottom: 4px solid var(--stone-dark);
+  padding: 80px 40px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 60px; align-items: center;
+}
+
+.spawn-visual {
+  display: flex; flex-direction: column; align-items: center;
+}
+
+/* Pixel art sign */
+.pixel-sign-frame {
+  background: var(--dirt);
+  border: 4px solid #5A3A20;
+  padding: 4px;
+  box-shadow: 4px 4px 0 #3A2010, 0 -4px 0 #6B4828 inset;
+  margin-bottom: 16px;
+  position: relative;
+}
+.pixel-sign-frame::before, .pixel-sign-frame::after {
+  content: '';
+  position: absolute;
+  bottom: -24px;
+  width: 12px; height: 24px;
+  background: var(--dirt);
+  border: 4px solid #5A3A20;
+  border-top: none;
+}
+.pixel-sign-frame::before { left: 30%; }
+.pixel-sign-frame::after  { right: 30%; }
+
+.pixel-sign-inner {
+  background: #C8A870;
+  padding: 20px 32px;
+  border: 2px solid #A08050;
+  text-align: center;
+}
+.pixel-sign-top {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 7px;
+  color: #5A3A20;
+  margin-bottom: 8px;
+  letter-spacing: .1em;
+}
+.pixel-sign-name {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 22px;
+  color: #2A1A08;
+  text-shadow: 2px 2px 0 rgba(0,0,0,.3);
+  letter-spacing: .05em;
+}
+.pixel-sign-bottom {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 6px;
+  color: #5A3A20;
+  margin-top: 8px;
+  letter-spacing: .08em;
+}
+
+.spawn-coords {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 8px;
+  color: var(--emerald);
+  background: rgba(32,192,96,.1);
+  border: 2px solid var(--emerald);
+  padding: 10px 16px;
+  margin-top: 24px;
+}
+.spawn-coords span { color: rgba(248,248,240,.5); display: block; font-size: 6px; margin-bottom: 4px; }
+
+.spawn-text h2 {
+  font-family: 'Press Start 2P', monospace;
+  font-size: clamp(14px, 2vw, 20px);
+  line-height: 1.8;
+  color: var(--white);
+  text-shadow: 2px 2px 0 #000;
+  margin-bottom: 24px;
+}
+.spawn-text h2 em { font-style: normal; color: var(--gold); }
+.spawn-text p {
+  font-size: 16px;
+  line-height: 1.9;
+  color: rgba(248,248,240,.7);
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+
+/* ── HOW IT WORKS ── */
+.how {
+  position: relative; z-index: 1;
+  background: var(--night);
+  padding: 80px 40px;
+}
+.section-head {
+  text-align: center;
+  margin-bottom: 56px;
+}
+.section-tag {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 9px;
+  color: var(--grass);
+  display: block;
+  margin-bottom: 16px;
+}
+.section-title {
+  font-family: 'Press Start 2P', monospace;
+  font-size: clamp(16px, 2.5vw, 26px);
+  color: var(--white);
+  text-shadow: 3px 3px 0 #000;
+  line-height: 1.6;
+}
+.section-title .t-gold { color: var(--gold); text-shadow: 3px 3px 0 var(--gold-dark); }
+
+.how-cards {
+  display: grid;
+  grid-template-columns: repeat(3,1fr);
+  gap: 4px;
+}
+.how-card {
+  background: var(--night2);
+  border: 4px solid var(--stone-dark);
+  padding: 32px 28px;
+  transition: transform .1s, border-color .2s;
+  opacity: 0;
+  transform: translateY(20px);
+}
+.how-card.visible { opacity: 1; transform: translateY(0); transition: opacity .4s, transform .4s, border-color .2s; }
+.how-card:hover { border-color: var(--gold); transform: translateY(-4px) !important; }
+
+.how-card-num {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 32px;
+  color: var(--gold);
+  text-shadow: 3px 3px 0 var(--gold-dark);
+  margin-bottom: 20px;
+  display: block;
+}
+.how-card-title {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 12px;
+  color: var(--white);
+  text-shadow: 1px 1px 0 #000;
+  margin-bottom: 16px;
+  line-height: 1.8;
+}
+.how-card-desc {
+  font-size: 15px;
+  color: rgba(248,248,240,.65);
+  line-height: 1.9;
+  font-weight: 600;
+}
+
+/* Inventory item strip */
+.inventory {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+  margin: 48px 0 0;
+  flex-wrap: wrap;
+}
+.inv-slot {
+  width: 56px; height: 56px;
+  background: var(--stone-dark);
+  border: 3px solid #666;
+  border-bottom-color: #333;
+  border-right-color: #333;
+  border-top-color: #888;
+  border-left-color: #888;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 28px;
+  position: relative;
+  cursor: pointer;
+  transition: border-color .1s;
+}
+.inv-slot:hover { border-color: var(--white); }
+.inv-slot .inv-count {
+  position: absolute;
+  bottom: 2px; right: 4px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 7px;
+  color: var(--white);
+  text-shadow: 1px 1px 0 #000;
+}
+.inv-tooltip {
+  position: absolute;
+  bottom: 64px; left: 50%;
+  transform: translateX(-50%);
+  background: var(--night);
+  border: 2px solid var(--gold);
+  padding: 6px 10px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 7px;
+  color: var(--gold);
+  white-space: nowrap;
+  display: none;
+  z-index: 10;
+  pointer-events: none;
+}
+.inv-slot:hover .inv-tooltip { display: block; }
+
+/* ── TWO TRACKS ── */
+.tracks-section {
+  position: relative; z-index: 1;
+  background: var(--night2);
+  border-top: 4px solid var(--stone-dark);
+  padding: 80px 40px;
+}
+.game-modes {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  margin-top: 48px;
+}
+.game-mode {
+  border: 4px solid var(--stone-dark);
+  padding: 40px 36px;
+  position: relative;
+  transition: border-color .2s;
+  cursor: pointer;
+}
+.game-mode:hover { border-color: var(--gold); }
+.game-mode-survival { background: linear-gradient(135deg, #1A2A1A 0%, var(--night2) 100%); }
+.game-mode-creative { background: linear-gradient(135deg, #1A1A2A 0%, var(--night2) 100%); }
+
+.mode-badge {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 8px;
+  padding: 6px 12px;
+  display: inline-block;
+  margin-bottom: 20px;
+}
+.mode-badge-survival { background: var(--grass); color: var(--white); box-shadow: 2px 2px 0 var(--grass-dark); }
+.mode-badge-creative { background: var(--sky);   color: var(--white); box-shadow: 2px 2px 0 var(--sky-dark); }
+
+.mode-title {
+  font-family: 'Press Start 2P', monospace;
+  font-size: clamp(16px, 2.5vw, 24px);
+  line-height: 1.5;
+  margin-bottom: 8px;
+  text-shadow: 3px 3px 0 #000;
+}
+.game-mode-survival .mode-title { color: var(--grass); }
+.game-mode-creative .mode-title { color: var(--sky); }
+
+.mode-subtitle {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 9px;
+  color: rgba(248,248,240,.45);
+  margin-bottom: 24px;
+  line-height: 1.8;
+}
+.mode-desc {
+  font-size: 16px;
+  color: rgba(248,248,240,.75);
+  line-height: 1.9;
+  font-weight: 600;
+  margin-bottom: 28px;
+}
+.mode-steps {
+  list-style: none;
+  margin-bottom: 32px;
+}
+.mode-steps li {
+  font-family: 'Nunito', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  color: rgba(248,248,240,.7);
+  padding: 10px 0;
+  border-bottom: 2px solid rgba(255,255,255,.07);
+  line-height: 1.7;
+  display: flex; gap: 10px; align-items: flex-start;
+}
+.mode-steps li:last-child { border-bottom: none; }
+.mode-steps li::before { content: '»'; color: var(--gold); flex-shrink: 0; }
+
+.reward-box {
+  background: rgba(0,0,0,.3);
+  border: 2px solid rgba(255,255,255,.08);
+  padding: 14px 16px;
+  margin-bottom: 28px;
+  font-size: 15px;
+  color: rgba(248,248,240,.7);
+  line-height: 1.75;
+  font-weight: 600;
+}
+.reward-box strong { color: var(--gold); display: block; font-family: 'Press Start 2P', monospace; font-size: 9px; margin-bottom: 8px; }
+
+/* ── APPLY ── */
+.apply-section {
+  position: relative; z-index: 1;
+  background: var(--night);
+  padding: 80px 40px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 60px; align-items: start;
+}
+.apply-left h2 {
+  font-family: 'Press Start 2P', monospace;
+  font-size: clamp(14px, 2vw, 22px);
+  color: var(--white);
+  text-shadow: 3px 3px 0 #000;
+  line-height: 1.8;
+  margin-bottom: 20px;
+}
+.apply-left h2 em { font-style: normal; color: var(--gold); text-shadow: 2px 2px 0 var(--gold-dark); }
+.apply-left p {
+  font-size: 15px;
+  color: rgba(248,248,240,.65);
+  line-height: 1.9;
+  font-weight: 600;
+  margin-bottom: 32px;
+}
+.perk-list { list-style: none; }
+.perk-list li {
+  font-family: 'Nunito', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  color: rgba(248,248,240,.75);
+  padding: 10px 0;
+  border-bottom: 2px solid rgba(255,255,255,.07);
+  display: flex; gap: 10px; align-items: center;
+  line-height: 1.7;
+}
+.perk-list li::before { content: '✦'; color: var(--gold); flex-shrink: 0; }
+
+.apply-form-wrap {
+  background: var(--night2);
+  border: 4px solid var(--stone-dark);
+  padding: 36px;
+}
+.form-heading {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 13px;
+  color: var(--gold);
+  text-shadow: 2px 2px 0 var(--gold-dark);
+  margin-bottom: 28px;
+  line-height: 1.6;
+}
+.f-group { margin-bottom: 18px; }
+.f-label {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 9px;
+  color: rgba(248,248,240,.5);
+  display: block;
+  margin-bottom: 8px;
+  letter-spacing: .08em;
+}
+.f-input, .f-select, .f-textarea {
+  width: 100%;
+  background: var(--night);
+  border: 2px solid var(--stone-dark);
+  color: var(--white);
+  padding: 12px 14px;
+  font-family: 'Nunito', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  outline: none;
+  transition: border-color .15s;
+  appearance: none;
+}
+.f-input:focus, .f-select:focus, .f-textarea:focus { border-color: var(--gold); }
+.f-input::placeholder { color: rgba(248,248,240,.2); }
+.f-textarea { resize: vertical; min-height: 72px; }
+.f-select option { background: var(--night); }
+.f-radios { display: flex; gap: 4px; }
+.f-radio {
+  flex: 1; text-align: center;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 7px;
+  padding: 10px 6px;
+  background: var(--night);
+  border: 2px solid var(--stone-dark);
+  color: rgba(248,248,240,.5);
+  cursor: pointer;
+  transition: all .15s;
+  line-height: 1.6;
+}
+.f-radio.on { background: rgba(240,192,64,.1); border-color: var(--gold); color: var(--gold); }
+.f-submit {
+  width: 100%; margin-top: 4px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 10px;
+  padding: 16px;
+  background: var(--grass);
+  color: var(--white);
+  border: none; cursor: pointer;
+  box-shadow: 0 6px 0 var(--grass-dark);
+  transition: transform .1s, box-shadow .1s;
+  line-height: 1.4;
+}
+.f-submit:hover { background: #6DC45B; }
+.f-submit:active { transform: translateY(4px); box-shadow: 0 2px 0 var(--grass-dark); }
+.f-success { display: none; text-align: center; padding: 40px 20px; }
+.f-success-icon { font-size: 48px; display: block; margin-bottom: 16px; }
+.f-success h3 { font-family: 'Press Start 2P', monospace; font-size: 13px; color: var(--gold); text-shadow: 2px 2px 0 var(--gold-dark); line-height: 1.8; margin-bottom: 12px; }
+.f-success p { font-size: 13px; color: rgba(248,248,240,.6); font-weight: 600; line-height: 1.8; }
+
+/* ── OSM COUNTER ── */
+.osm-bar {
+  background: var(--grass-dark);
+  border-top: 4px solid var(--grass);
+  padding: 20px 40px;
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  flex-wrap: wrap;
+}
+.osm-label { font-family: 'Press Start 2P', monospace; font-size: 8px; color: rgba(248,248,240,.6); }
+.osm-num { font-family: 'Press Start 2P', monospace; font-size: 18px; color: var(--white); text-shadow: 2px 2px 0 rgba(0,0,0,.5); }
+.osm-live { font-family: 'Press Start 2P', monospace; font-size: 7px; color: var(--gold); display: flex; align-items: center; gap: 8px; }
+.osm-blink { animation: blink 1s step-end infinite; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+/* ── FOOTER ── */
+footer {
+  background: #0A0E14;
+  border-top: 4px solid var(--stone-dark);
+  padding: 40px;
+  display: flex; justify-content: space-between; align-items: center;
+  flex-wrap: wrap; gap: 20px;
+}
+.footer-logo { font-family: 'Press Start 2P', monospace; font-size: 10px; color: rgba(248,248,240,.3); line-height: 1.8; }
+.footer-info { font-size: 12px; color: rgba(248,248,240,.3); line-height: 1.9; font-weight: 600; text-align: right; }
+.footer-info a { color: rgba(248,248,240,.5); text-decoration: none; }
+
+/* ── ANIMATIONS ── */
+@keyframes fadeIn { from{opacity:0} to{opacity:1} }
+@keyframes pixelReveal {
+  0%  { opacity:0; clip-path: inset(0 100% 0 0); }
+  100%{ opacity:1; clip-path: inset(0 0% 0 0); }
+}
+
+/* ── RESPONSIVE ── */
+/* ── TABLET (≤1024px) ── */
+@media(max-width:1024px){
+  .iso-station { display:none; }
+  .hero-right {
+    position: relative;
+    right: auto; top: auto;
+    transform: none;
+    width: 100%;
+    max-width: 100%;
+    margin-top: 32px;
+  }
+  .hero-content { max-width:100%; }
+  .how-cards { grid-template-columns:1fr 1fr; }
+  .apply-section { gap:40px; }
+  .osm-step-arrow { display:none !important; }
+}
+
+/* ── MOBILE (≤860px) ── */
+@media(max-width:860px){
+  /* Nav */
+  nav { padding:16px 20px; }
+  .nav-links { display:none; }
+
+  /* Hero */
+  .hero { padding:40px 20px 60px; min-height:auto; align-items:stretch; }
+  .hero-content { max-width:100%; }
+  .iso-station { display:none; }
+  .mc-splash { top:auto; bottom:28%; left:50%; font-size:clamp(14px,5vw,20px); }
+  .hero-title { font-size:clamp(28px,9vw,52px) !important; }
+  .hero-sub { font-size:clamp(11px,3.5vw,16px); }
+  .hero-desc { font-size:16px; }
+  .hero-btns { flex-direction:column; gap:12px; }
+  .px-btn { display:block; text-align:center; }
+
+  /* Spawn */
+  .spawn-section { grid-template-columns:1fr; padding:48px 20px; gap:40px; }
+  .pixel-sign-name { font-size:18px; }
+
+  /* How */
+  .how { padding:48px 20px; }
+  .how-cards { grid-template-columns:1fr; }
+
+  /* Data source cards */
+  .data-grid-mobile { grid-template-columns:1fr !important; }
+
+  /* OSM guide steps — stack 2×2 on mobile */
+  .osm-steps-grid { grid-template-columns:1fr 1fr !important; }
+  /* Arrow connectors hidden on mobile */
+  .osm-step-arrow { display:none !important; }
+  /* OSM what-to-add grid */
+  .osm-what-grid-inner { grid-template-columns:1fr 1fr !important; }
+
+  /* Two tracks */
+  .tracks-section { padding:48px 20px; }
+  .game-modes { grid-template-columns:1fr; }
+  .game-mode { padding:32px 24px; }
+  .mode-title { font-size:clamp(28px,8vw,40px) !important; }
+
+  /* Apply */
+  .apply-section { grid-template-columns:1fr; padding:48px 20px; gap:40px; }
+  .apply-form-wrap { padding:24px 20px; }
+
+  /* Footer */
+  footer { padding:28px 20px; flex-direction:column; text-align:center; gap:12px; }
+  .footer-info { text-align:center; }
+
+  /* Join section grids */
+  .join-platforms { grid-template-columns:1fr !important; }
+  .join-rules { grid-template-columns:1fr !important; }
+  .join-warps { grid-template-columns:1fr !important; }
+
+  /* Server addresses stack */
+  .server-addresses { flex-direction:column; }
+  .server-addresses > div { width:100%; max-width:100%; overflow:hidden; }
+  .server-addresses div[style*="font-size:13px"] { font-size:11px !important; }
+
+  /* Inline-styled sections need responsive padding */
+  #join, #osm-guide { padding:48px 20px !important; }
+}
+
+/* ── SMALL MOBILE (≤480px) ── */
+@media(max-width:480px){
+  .hero { padding:32px 16px 48px; align-items:stretch; }
+  .hero-content { max-width:100%; }
+  .spawn-section, .how, .tracks-section, .apply-section { padding:40px 16px; }
+  #join, #osm-guide { padding:40px 16px !important; }
+  .pixel-sign-name { font-size:15px; }
+  .how-card { padding:24px 20px; }
+  .osm-steps-grid { grid-template-columns:1fr !important; }
+  .osm-what-grid-inner { grid-template-columns:1fr !important; }
+  .game-mode { padding:28px 20px; }
+  .apply-form-wrap { padding:20px 16px; }
+  .hero-btns { gap:10px; }
+  nav { padding:12px 16px; }
+  .nav-logo { font-size:14px !important; }
+  .nav-logo span { font-size:9px !important; }
+}
+</style>
+<!-- Cloudflare Web Analytics --><script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "11c5680d543949ec81853ac2925edba9"}'></script><!-- End Cloudflare Web Analytics -->
+</head>
+<body>
+
+<!-- Stars -->
+<div class="stars" id="stars"></div>
+
+<nav>
+  <div class="nav-logo">
+    BUILD DAVIS
+    <span>A MINECRAFT WORLD PROJECT</span>
+  </div>
+  <ul class="nav-links">
+    <li><a href="#map">MAP DAVIS</a></li>
+    <li><a href="#build">BUILD DAVIS</a></li>
+    <li><a href="#how">HOW</a></li>
+    <li><a href="#apply">APPLY</a></li>
+  </ul>
+  <a href="https://discord.gg/Rt7c6Jje" target="_blank" rel="noopener noreferrer" class="nav-discord">⌨ DISCORD</a>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-content">
+    <div class="hero-tag">NEW WORLD GENERATING...</div>
+    <div class="hero-title">
+      <div class="t-white">DAVIS,</div>
+      <div class="t-gold">CALIFORNIA</div>
+      <div class="t-green">IN MINECRAFT.</div>
+    </div>
+    <div class="hero-sub">The most accurate block-for-block<br>recreation ever built.</div>
+    <p class="hero-desc">
+      Real LiDAR terrain. Real building heights. Real bike paths. Real valley oaks. We're building Davis from actual geodata — and we need people who know and love this town to help us finish it.
+    </p>
+    <div class="hero-btns">
+      <a href="#map" class="px-btn px-btn-green">▶ HELP MAP DAVIS</a>
+      <a href="#apply" class="px-btn px-btn-green">✦ APPLY TO BUILD</a>
+    </div>
+    <!-- Server addresses -->
+    <div class="server-addresses" style="margin-top:28px;display:flex;gap:16px;flex-wrap:wrap;width:100%;max-width:100%;">
+      <div style="background:var(--night2);border:2px solid var(--grass-dark);padding:14px 22px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;max-width:100%;overflow:hidden;">
+        <div style="font-family:'Press Start 2P',monospace;font-size:9px;color:var(--grass);line-height:1.6;letter-spacing:1px;">JAVA</div>
+        <div style="font-family:'Press Start 2P',monospace;font-size:13px;color:var(--white);letter-spacing:1px;word-break:break-all;">builddavis.world</div>
+      </div>
+      <div style="background:var(--night2);border:2px solid var(--sky-dark);padding:14px 22px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;max-width:100%;overflow:hidden;">
+        <div style="font-family:'Press Start 2P',monospace;font-size:9px;color:var(--sky);line-height:1.6;letter-spacing:1px;">BEDROCK</div>
+        <div style="font-family:'Press Start 2P',monospace;font-size:13px;color:var(--white);letter-spacing:1px;word-break:break-all;">builddavis.world</div>
+        <div style="font-family:'Nunito',sans-serif;font-size:12px;color:rgba(248,248,240,.5);font-weight:700;">PORT 25606</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- World statistics panel -->
+  <div class="hero-right">
+    <div class="hero-right-title">▸ WORLD STATS</div>
+    <div class="hero-stats-grid">
+      <div class="hero-stat">
+        <span class="hero-stat-icon">🟫</span>
+        <div class="hero-stat-num">3.0B</div>
+        <div class="hero-stat-label">BLOCKS<br>PLACED</div>
+      </div>
+      <div class="hero-stat">
+        <span class="hero-stat-icon">🏠</span>
+        <div class="hero-stat-num">~20K</div>
+        <div class="hero-stat-label">BUILDINGS<br>MODELED</div>
+      </div>
+      <div class="hero-stat">
+        <span class="hero-stat-icon">🌳</span>
+        <div class="hero-stat-num">48K</div>
+        <div class="hero-stat-label">TREES<br>PLACED</div>
+      </div>
+      <div class="hero-stat">
+        <span class="hero-stat-icon">🛣️</span>
+        <div class="hero-stat-num">7K</div>
+        <div class="hero-stat-label">ROAD<br>SEGMENTS</div>
+      </div>
+      <div class="hero-stat">
+        <span class="hero-stat-icon">🚲</span>
+        <div class="hero-stat-num">100mi</div>
+        <div class="hero-stat-label">BIKE<br>PATHS</div>
+      </div>
+      <div class="hero-stat">
+        <span class="hero-stat-icon">🏛️</span>
+        <div class="hero-stat-num">65</div>
+        <div class="hero-stat-label">LANDMARKS<br>MAPPED</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="how" id="how">
+  <div class="section-head">
+    <span class="section-tag">// HOW IT WORKS</span>
+    <h2 class="section-title">REAL DATA.<br><span class="t-gold">REAL PEOPLE.</span><br>REAL DAVIS.</h2>
+  </div>
+  <div class="how-cards">
+    <div class="how-card">
+      <span class="how-card-num">01</span>
+      <div class="how-card-title">WE GENERATE<br>THE BASE WORLD</div>
+      <p class="how-card-desc">Our pipeline fuses LiDAR terrain, OpenStreetMap buildings, traced footprints, and City of Davis GIS data to auto-generate a 1-meter-accurate Minecraft world of the whole town.</p>
+    </div>
+    <div class="how-card">
+      <span class="how-card-num">02</span>
+      <div class="how-card-title">THE COMMUNITY<br>MAPS THE DETAILS</div>
+      <p class="how-card-desc">Benches, bike racks, murals, signage — things databases miss. We need people who know Davis to add the bench outside Mishka's, the bikes outside Shields Library.</p>
+    </div>
+    <div class="how-card">
+      <span class="how-card-num">03</span>
+      <div class="how-card-title">CONTRIBUTORS<br>POLISH THE SERVER</div>
+      <p class="how-card-desc">Approved builders join the Minecraft server. Claim a zone, get the style guide, and make your neighborhood look exactly like the real thing.</p>
+    </div>
+  </div>
+
+  <!-- Data sources — clear cards replacing the inventory bar -->
+  <div style="margin-top:48px;">
+    <div style="font-family:'Press Start 2P',monospace;font-size:11px;color:var(--grass);margin-bottom:20px;">// POWERED BY 7 REAL DATA SOURCES</div>
+    <div class="data-grid-mobile" style="display:grid;grid-template-columns:repeat(2,1fr);gap:4px;max-width:100%;overflow:hidden;">
+      <div style="background:var(--night2);border:4px solid var(--stone-dark);padding:24px 24px;display:flex;gap:16px;align-items:flex-start;transition:border-color .2s;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--stone-dark)'">
+        <div style="font-size:32px;flex-shrink:0;">⛰️</div>
+        <div>
+          <div style="font-family:'Press Start 2P',monospace;font-size:9px;color:var(--gold);margin-bottom:8px;line-height:1.6;">USGS 3DEP LIDAR</div>
+          <div style="font-size:16px;font-weight:800;color:var(--white);margin-bottom:6px;">Terrain & elevation</div>
+          <div style="font-size:14px;line-height:1.8;color:rgba(248,248,240,.6);font-weight:600;">1-meter resolution elevation for all of Yolo County. Every slope and ditch captured — 30× more detailed than existing tools.</div>
+        </div>
+      </div>
+      <div style="background:var(--night2);border:4px solid var(--stone-dark);padding:24px 24px;display:flex;gap:16px;align-items:flex-start;transition:border-color .2s;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--stone-dark)'">
+        <div style="font-size:32px;flex-shrink:0;">🏙️</div>
+        <div>
+          <div style="font-family:'Press Start 2P',monospace;font-size:9px;color:var(--gold);margin-bottom:8px;line-height:1.6;">OVERTURE MAPS</div>
+          <div style="font-size:16px;font-weight:800;color:var(--white);margin-bottom:6px;">Building footprints & heights</div>
+          <div style="font-size:14px;line-height:1.8;color:rgba(248,248,240,.6);font-weight:600;">1.2 billion building outlines from satellite imagery, with height estimates for every structure.</div>
+        </div>
+      </div>
+      <div style="background:var(--night2);border:4px solid var(--stone-dark);padding:24px 24px;display:flex;gap:16px;align-items:flex-start;transition:border-color .2s;" onmouseover="this.style.borderColor='var(--grass)'" onmouseout="this.style.borderColor='var(--stone-dark)'">
+        <div style="font-size:32px;flex-shrink:0;">🗺️</div>
+        <div>
+          <div style="font-family:'Press Start 2P',monospace;font-size:9px;color:var(--grass);margin-bottom:8px;line-height:1.6;">OPENSTREETMAP</div>
+          <div style="font-size:16px;font-weight:800;color:var(--white);margin-bottom:6px;">Roads, buildings & amenities</div>
+          <div style="font-size:14px;line-height:1.8;color:rgba(248,248,240,.6);font-weight:600;">Community-contributed map data. The richer OSM is for Davis, the more detailed the world. <strong style="color:var(--grass);">This is where you can help.</strong></div>
+        </div>
+      </div>
+      <div style="background:var(--night2);border:4px solid var(--stone-dark);padding:24px 24px;display:flex;gap:16px;align-items:flex-start;transition:border-color .2s;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--stone-dark)'">
+        <div style="font-size:32px;flex-shrink:0;">🚲</div>
+        <div>
+          <div style="font-family:'Press Start 2P',monospace;font-size:9px;color:var(--gold);margin-bottom:8px;line-height:1.6;">CITY OF DAVIS GIS</div>
+          <div style="font-size:16px;font-weight:800;color:var(--white);margin-bottom:6px;">Bike network, trees & zoning</div>
+          <div style="font-size:14px;line-height:1.8;color:rgba(248,248,240,.6);font-weight:600;">Davis's 100-mile bike path network and town tree inventory — valley oaks become dark oak blocks, pines become spruce.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- JOIN THE SERVER -->
+<section id="join" style="position:relative;z-index:1;background:var(--night);padding:80px 40px;border-bottom:4px solid var(--stone-dark);box-sizing:border-box;">
+  <div class="section-head">
+    <span class="section-tag">// JOIN THE SERVER</span>
+    <h2 class="section-title">Explore Davis in <span class="t-gold">Minecraft.</span></h2>
+  </div>
+
+  <!-- Platform cards -->
+  <div class="join-platforms" style="display:grid;grid-template-columns:repeat(2,1fr);gap:4px;margin-bottom:40px;">
+    <!-- Java -->
+    <div style="background:var(--night2);border:4px solid var(--grass-dark);padding:28px 24px;">
+      <div style="font-size:28px;margin-bottom:12px;">☕</div>
+      <div style="font-family:'Press Start 2P',monospace;font-size:12px;color:var(--grass);margin-bottom:16px;">JAVA EDITION</div>
+      <div style="font-size:14px;color:rgba(248,248,240,.6);font-weight:700;margin-bottom:6px;">Server Address</div>
+      <div style="font-family:'Press Start 2P',monospace;font-size:13px;color:var(--white);margin-bottom:16px;background:var(--night);padding:10px 14px;border:2px solid var(--stone-dark);">builddavis.world</div>
+      <div style="font-size:14px;color:rgba(248,248,240,.6);font-weight:700;margin-bottom:6px;">Port</div>
+      <div style="font-family:'Press Start 2P',monospace;font-size:13px;color:var(--white);margin-bottom:16px;background:var(--night);padding:10px 14px;border:2px solid var(--stone-dark);">25606</div>
+      <div style="font-size:13px;color:rgba(248,248,240,.5);line-height:1.8;font-weight:600;">Multiplayer → Add Server → paste address and port → Join</div>
+    </div>
+    <!-- Bedrock -->
+    <div style="background:var(--night2);border:4px solid var(--sky-dark);padding:28px 24px;">
+      <div style="font-size:28px;margin-bottom:12px;">📱</div>
+      <div style="font-family:'Press Start 2P',monospace;font-size:12px;color:var(--sky);margin-bottom:16px;">BEDROCK · MOBILE / SWITCH / XBOX</div>
+      <div style="font-size:14px;color:rgba(248,248,240,.6);font-weight:700;margin-bottom:6px;">Server Address</div>
+      <div style="font-family:'Press Start 2P',monospace;font-size:13px;color:var(--white);margin-bottom:16px;background:var(--night);padding:10px 14px;border:2px solid var(--stone-dark);">builddavis.world</div>
+      <div style="font-size:14px;color:rgba(248,248,240,.6);font-weight:700;margin-bottom:6px;">Port</div>
+      <div style="font-family:'Press Start 2P',monospace;font-size:13px;color:var(--white);margin-bottom:16px;background:var(--night);padding:10px 14px;border:2px solid var(--stone-dark);">25606</div>
+      <div style="font-size:13px;color:rgba(248,248,240,.5);line-height:1.8;font-weight:600;">Play → Servers → scroll down → Add Server → paste address and port → Join</div>
+    </div>
+  </div>
+
+  <!-- Quick rules -->
+  <div class="join-rules" style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-bottom:40px;">
+    <div style="background:var(--night2);padding:18px 20px;display:flex;gap:12px;align-items:flex-start;">
+      <span style="font-size:20px;flex-shrink:0;">🗺️</span>
+      <div><div style="font-size:14px;font-weight:800;color:var(--white);margin-bottom:4px;">Explore freely</div><div style="font-size:12px;color:rgba(248,248,240,.5);font-weight:600;line-height:1.7;">Fly around the entire town</div></div>
+    </div>
+    <div style="background:var(--night2);padding:18px 20px;display:flex;gap:12px;align-items:flex-start;">
+      <span style="font-size:20px;flex-shrink:0;">🔨</span>
+      <div><div style="font-size:14px;font-weight:800;color:var(--white);margin-bottom:4px;">No building</div><div style="font-size:12px;color:rgba(248,248,240,.5);font-weight:600;line-height:1.7;">Without builder rank — apply below</div></div>
+    </div>
+    <div style="background:var(--night2);padding:18px 20px;display:flex;gap:12px;align-items:flex-start;">
+      <span style="font-size:20px;flex-shrink:0;">🐛</span>
+      <div><div style="font-size:14px;font-weight:800;color:var(--white);margin-bottom:4px;">Found a bug?</div><div style="font-size:12px;color:rgba(248,248,240,.5);font-weight:600;line-height:1.7;">Report it in Discord</div></div>
+    </div>
+  </div>
+
+  <!-- Where to go first -->
+  <div style="font-family:'Press Start 2P',monospace;font-size:10px;color:var(--gold);margin-bottom:16px;letter-spacing:1px;">// WHERE TO GO FIRST</div>
+  <div class="join-warps" style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px;">
+    <div style="background:var(--night2);border:4px solid var(--stone-dark);padding:24px 20px;">
+      <div style="font-size:24px;margin-bottom:10px;">🏗️</div>
+      <div style="font-family:'Press Start 2P',monospace;font-size:11px;color:var(--white);margin-bottom:8px;">Water Tower</div>
+      <div style="font-family:'Press Start 2P',monospace;font-size:10px;color:var(--grass);margin-bottom:12px;background:var(--night);padding:8px 10px;border:2px solid var(--grass-dark);display:inline-block;">/warp watertower</div>
+      <div style="font-size:13px;color:rgba(248,248,240,.5);font-weight:600;line-height:1.7;">The iconic UC Davis landmark — 48 blocks tall with "UC DAVIS" lettering</div>
+    </div>
+    <div style="background:var(--night2);border:4px solid var(--stone-dark);padding:24px 20px;">
+      <div style="font-size:24px;margin-bottom:10px;">🏟️</div>
+      <div style="font-family:'Press Start 2P',monospace;font-size:11px;color:var(--white);margin-bottom:8px;">Aggie Stadium</div>
+      <div style="font-family:'Press Start 2P',monospace;font-size:10px;color:var(--grass);margin-bottom:12px;background:var(--night);padding:8px 10px;border:2px solid var(--grass-dark);display:inline-block;">/warp stadium</div>
+      <div style="font-size:13px;color:rgba(248,248,240,.5);font-weight:600;line-height:1.7;">Full oval track, bleachers, end zones, goal posts</div>
+    </div>
+    <div style="background:var(--night2);border:4px solid var(--stone-dark);padding:24px 20px;">
+      <div style="font-size:24px;margin-bottom:10px;">🎠</div>
+      <div style="font-family:'Press Start 2P',monospace;font-size:11px;color:var(--white);margin-bottom:8px;">Flying Carousel</div>
+      <div style="font-family:'Press Start 2P',monospace;font-size:10px;color:var(--grass);margin-bottom:12px;background:var(--night);padding:8px 10px;border:2px solid var(--grass-dark);display:inline-block;">/warp carousel</div>
+      <div style="font-size:13px;color:rgba(248,248,240,.5);font-weight:600;line-height:1.7;">Hand-carved animals in Central Park's beloved carousel pavilion</div>
+    </div>
+  </div>
+</section>
+
+<!-- TWO TRACKS -->
+<section class="tracks-section">
+  <div class="section-head">
+    <span class="section-tag">// CHOOSE YOUR ROLE</span>
+    <h2 class="section-title">TWO WAYS TO<br><span class="t-gold">CONTRIBUTE.</span></h2>
+  </div>
+  <div class="game-modes">
+    <div class="game-mode game-mode-survival" id="map">
+      <div class="mode-badge mode-badge-survival">SURVIVAL MODE</div>
+      <h3 class="mode-title">MAP<br>DAVIS</h3>
+      <div class="mode-subtitle">NO MINECRAFT NEEDED</div>
+      <p class="mode-desc">Add real-world detail to OpenStreetMap and it automatically appears in the generated world. Your bench, your bike rack, your tree — in the game forever.</p>
+      <ul class="mode-steps">
+        <li>Create a free OpenStreetMap account</li>
+        <li>Open the iD editor — we'll link you to Davis directly</li>
+        <li>Walk or bike a street, add what you see</li>
+        <li>Your edits appear in the world at next generation</li>
+      </ul>
+      <div class="reward-box"><strong>✦ YOUR REWARD</strong>10+ edits = a special thanks in the credits.</div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;">
+        <a href="#osm-guide" class="px-btn px-btn-green">📖 LEARN MORE</a>
+        <a href="https://www.openstreetmap.org/edit#map=16/38.5449/-121.7405" target="_blank" rel="noopener noreferrer" class="px-btn px-btn-green">▶ OPEN OSM EDITOR</a>
+        <a href="https://github.com/coopdogGGs/builddavis-engine/issues/new?template=osm-credit.yml" target="_blank" rel="noopener noreferrer" class="px-btn px-btn-gold">✦ CLAIM YOUR CREDIT</a>
+      </div>
+    </div>
+    <div class="game-mode game-mode-creative" id="build">
+      <div class="mode-badge mode-badge-creative">CREATIVE MODE</div>
+      <h3 class="mode-title">BUILD<br>DAVIS</h3>
+      <div class="mode-subtitle">MINECRAFT BUILDERS WANTED</div>
+      <p class="mode-desc">Join the contributor server and start building on the Build Davis server! Claim a zone, get the style guide, and make your neighborhood look exactly like the real thing.</p>
+      <ul class="mode-steps">
+        <li>Apply with your Minecraft username below</li>
+        <li>Get approved — we review every application personally</li>
+        <li>Join Discord and claim your neighborhood zone</li>
+        <li>Start building on the Build Davis server!</li>
+      </ul>
+      <div class="reward-box"><strong>✦ YOUR REWARD</strong>Named contributor credit on a plaque in-world and in all project documentation.</div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;">
+        <a href="#apply" class="px-btn px-btn-green">✦ APPLY TO BUILD</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- OSM GUIDE (linked from Map Davis "Learn More") -->
+<section id="osm-guide" style="position:relative;z-index:1;background:var(--night);padding:80px 40px;border-bottom:4px solid var(--stone-dark);box-sizing:border-box;">
+  <div class="section-head">
+    <span class="section-tag">// TRACK 01 · NO MINECRAFT NEEDED</span>
+    <h2 class="section-title">Help us <span class="t-gold">map Davis.</span></h2>
+  </div>
+  <div style="background:var(--night2);border:4px solid var(--grass-dark);padding:28px 32px;margin-bottom:40px;display:flex;gap:20px;align-items:flex-start;">
+    <div style="font-size:36px;flex-shrink:0;">🗺️</div>
+    <div>
+      <div style="font-family:'Press Start 2P',monospace;font-size:11px;color:var(--grass);margin-bottom:12px;">WHAT IS OPENSTREETMAP?</div>
+      <p style="font-size:16px;line-height:1.85;color:rgba(248,248,240,.8);font-weight:600;">OpenStreetMap (OSM) is a free, community-built map of the world — like Wikipedia, but for maps. Our world generator pulls data directly from OSM to place benches, bike racks, trees, and street detail into Minecraft. The more OSM is filled in for Davis, the more alive our world will be. <strong style="color:var(--white);">You don't need Minecraft — just a browser.</strong></p>
+    </div>
+  </div>
+  <div class="osm-steps-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-bottom:40px;overflow:hidden;">
+    <div style="background:var(--night2);border:4px solid var(--stone-dark);padding:28px 20px;position:relative;">
+      <div style="font-family:'Press Start 2P',monospace;font-size:28px;color:var(--grass);text-shadow:2px 2px 0 var(--grass-dark);display:block;margin-bottom:14px;">01</div>
+      <div style="font-family:'Press Start 2P',monospace;font-size:10px;color:var(--white);margin-bottom:12px;line-height:1.8;">Create a free account</div>
+      <div style="font-size:14px;line-height:1.85;color:rgba(248,248,240,.65);font-weight:600;margin-bottom:12px;">Go to <strong style="color:var(--white);">openstreetmap.org</strong> and click Sign Up. Free — just needs an email.</div>
+      <div style="background:rgba(92,164,75,.12);border-left:3px solid var(--grass);padding:8px 10px;font-size:13px;font-weight:700;color:var(--grass);line-height:1.6;">Takes about 2 minutes</div>
+      <div class="osm-step-arrow" style="position:absolute;right:-16px;top:44%;font-size:18px;color:var(--grass-dark);z-index:2;">▶</div>
+    </div>
+    <div style="background:var(--night2);border:4px solid var(--stone-dark);padding:28px 20px;position:relative;">
+      <div style="font-family:'Press Start 2P',monospace;font-size:28px;color:var(--grass);text-shadow:2px 2px 0 var(--grass-dark);display:block;margin-bottom:14px;">02</div>
+      <div style="font-family:'Press Start 2P',monospace;font-size:10px;color:var(--white);margin-bottom:12px;line-height:1.8;">Open Davis in editor</div>
+      <div style="font-size:14px;line-height:1.85;color:rgba(248,248,240,.65);font-weight:600;margin-bottom:12px;">Click the button below — it opens OSM pre-loaded on Davis. Then click <strong style="color:var(--white);">Edit → Edit with iD</strong> in the top bar.</div>
+      <div style="background:rgba(92,164,75,.12);border-left:3px solid var(--grass);padding:8px 10px;font-size:13px;font-weight:700;color:var(--grass);line-height:1.6;">Works in your browser — no download</div>
+      <div class="osm-step-arrow" style="position:absolute;right:-16px;top:44%;font-size:18px;color:var(--grass-dark);z-index:2;">▶</div>
+    </div>
+    <div style="background:var(--night2);border:4px solid var(--stone-dark);padding:28px 20px;position:relative;">
+      <div style="font-family:'Press Start 2P',monospace;font-size:28px;color:var(--grass);text-shadow:2px 2px 0 var(--grass-dark);display:block;margin-bottom:14px;">03</div>
+      <div style="font-family:'Press Start 2P',monospace;font-size:10px;color:var(--white);margin-bottom:12px;line-height:1.8;">Add what you know</div>
+      <div style="font-size:14px;line-height:1.85;color:rgba(248,248,240,.65);font-weight:600;margin-bottom:12px;">See a bench on a Davis street? Click <strong style="color:var(--white);">Point</strong>, drop it on the map, choose "bench." Same for bike racks, trees, bins.</div>
+      <div style="background:rgba(92,164,75,.12);border-left:3px solid var(--grass);padding:8px 10px;font-size:13px;font-weight:700;color:var(--grass);line-height:1.6;">First edit takes under 5 minutes</div>
+      <div class="osm-step-arrow" style="position:absolute;right:-16px;top:44%;font-size:18px;color:var(--grass-dark);z-index:2;">▶</div>
+    </div>
+    <div style="background:var(--night2);border:4px solid var(--stone-dark);padding:28px 20px;">
+      <div style="font-family:'Press Start 2P',monospace;font-size:28px;color:var(--grass);text-shadow:2px 2px 0 var(--grass-dark);display:block;margin-bottom:14px;">04</div>
+      <div style="font-family:'Press Start 2P',monospace;font-size:10px;color:var(--white);margin-bottom:12px;line-height:1.8;">It appears in the world</div>
+      <div style="font-size:14px;line-height:1.85;color:rgba(248,248,240,.65);font-weight:600;margin-bottom:12px;">At our next generation run, your edit is pulled in automatically. Your bench becomes a stone slab on a fence post — exactly where you placed it.</div>
+      <div style="background:rgba(240,192,64,.12);border-left:3px solid var(--gold);padding:8px 10px;font-size:13px;font-weight:700;color:var(--gold);line-height:1.6;">10+ edits = a special thanks in the credits</div>
+    </div>
+  </div>
+  <div style="background:var(--night2);border:4px solid var(--sky-dark);padding:24px 28px;margin-bottom:32px;">
+    <div style="font-family:'Press Start 2P',monospace;font-size:10px;color:var(--sky);margin-bottom:16px;line-height:1.6;">// MOST USEFUL THINGS TO ADD</div>
+    <div class="osm-what-grid-inner" style="display:grid;grid-template-columns:repeat(3,1fr);gap:3px;">
+      <div style="background:var(--night);padding:14px;display:flex;gap:12px;align-items:flex-start;"><span style="font-size:20px;flex-shrink:0;">🪑</span><div><div style="font-size:15px;font-weight:800;color:var(--white);margin-bottom:3px;">Benches</div><div style="font-size:13px;color:rgba(248,248,240,.55);font-weight:600;line-height:1.7;">Tag: amenity = bench</div></div></div>
+      <div style="background:var(--night);padding:14px;display:flex;gap:12px;align-items:flex-start;"><span style="font-size:20px;flex-shrink:0;">🚲</span><div><div style="font-size:15px;font-weight:800;color:var(--white);margin-bottom:3px;">Bike racks</div><div style="font-size:13px;color:rgba(248,248,240,.55);font-weight:600;line-height:1.7;">Tag: amenity = bicycle_parking</div></div></div>
+      <div style="background:var(--night);padding:14px;display:flex;gap:12px;align-items:flex-start;"><span style="font-size:20px;flex-shrink:0;">🌳</span><div><div style="font-size:15px;font-weight:800;color:var(--white);margin-bottom:3px;">Trees + species</div><div style="font-size:13px;color:rgba(248,248,240,.55);font-weight:600;line-height:1.7;">Tag: natural = tree + species</div></div></div>
+      <div style="background:var(--night);padding:14px;display:flex;gap:12px;align-items:flex-start;"><span style="font-size:20px;flex-shrink:0;">🗑️</span><div><div style="font-size:15px;font-weight:800;color:var(--white);margin-bottom:3px;">Waste bins</div><div style="font-size:13px;color:rgba(248,248,240,.55);font-weight:600;line-height:1.7;">Tag: amenity = waste_basket</div></div></div>
+      <div style="background:var(--night);padding:14px;display:flex;gap:12px;align-items:flex-start;"><span style="font-size:20px;flex-shrink:0;">🚰</span><div><div style="font-size:15px;font-weight:800;color:var(--white);margin-bottom:3px;">Water fountains</div><div style="font-size:13px;color:rgba(248,248,240,.55);font-weight:600;line-height:1.7;">Tag: amenity = drinking_water</div></div></div>
+      <div style="background:var(--night);padding:14px;display:flex;gap:12px;align-items:flex-start;"><span style="font-size:20px;flex-shrink:0;">☕</span><div><div style="font-size:15px;font-weight:800;color:var(--white);margin-bottom:3px;">Cafes & shops</div><div style="font-size:13px;color:rgba(248,248,240,.55);font-weight:600;line-height:1.7;">Tag: amenity = cafe / shop = *</div></div></div>
+    </div>
+  </div>
+
+</section>
+
+
+<!-- APPLY -->
+<section class="apply-section" id="apply">
+  <div class="apply-left">
+    <h2>BUILD THE TOWN<br>YOU <em>KNOW.</em></h2>
+    <p>We're looking for contributors with a real connection to Davis — students, alumni, locals, or builders who care about making something accurate and lasting.</p>
+    <p>Every application is reviewed personally. We'd rather have 30 committed builders than 300 who never log on.</p>
+    <ul class="perk-list">
+      <li>Early access before public launch</li>
+      <li>Named credit on the in-world contributor plaque</li>
+      <li>Assigned zone — your neighborhood, your build</li>
+      <li>Style guide and build reference materials</li>
+      <li>Discord community with other Davis builders</li>
+    </ul>
+  </div>
+  <div class="apply-form-wrap">
+    <div class="form-heading">APPLY FOR<br>BUILDER ACCESS</div>
+    <form id="form-inner" action="https://formspree.io/f/xreoyded" method="POST" onsubmit="handleSubmit(event)">
+      <div class="f-group">
+        <label class="f-label">YOUR NAME</label>
+        <input class="f-input" type="text" name="name" placeholder="First and last name" required>
+      </div>
+      <div class="f-group">
+        <label class="f-label">EMAIL ADDRESS</label>
+        <input class="f-input" type="email" name="email" placeholder="you@example.com" required>
+      </div>
+      <div class="f-group">
+        <label class="f-label">MINECRAFT USERNAME</label>
+        <input class="f-input" type="text" name="minecraft_username" placeholder="YourUsername" required>
+      </div>
+      <div class="f-group">
+        <label class="f-label">CONNECTION TO DAVIS</label>
+        <select class="f-select" name="connection_to_davis">
+          <option value="" disabled selected>SELECT ONE</option>
+          <option>Current UC Davis student</option>
+          <option>UC Davis alumni</option>
+          <option>Davis resident</option>
+          <option>Former Davis resident</option>
+          <option>Minecraft builder (no Davis connection)</option>
+          <option>Other</option>
+        </select>
+      </div>
+      <div class="f-group">
+        <label class="f-label">WHAT WOULD YOU MOST WANT TO BUILD?</label>
+        <textarea class="f-textarea" name="what_to_build" placeholder="The Arboretum, the Quad, my old street..."></textarea>
+      </div>
+      <input type="hidden" name="_subject" value="New Build Davis Application">
+      <input type="hidden" name="_next" value="">
+      <button class="f-submit" id="submit-btn" type="submit">▶ SUBMIT APPLICATION</button>
+      <div style="margin-top:12px;font-size:11px;color:rgba(248,248,240,.4);line-height:1.6;">By submitting, you agree to our <a href="https://builddavis.org/privacy" style="color:var(--sky);text-decoration:underline;">Privacy Policy</a>. We only use your info to review your application.</div>
+    </form>
+    <div class="f-success" id="f-success">
+      <span class="f-success-icon">🎮</span>
+      <h3>THANK YOU FOR<br>YOUR INTEREST!</h3>
+      <p>We'll review your application and reach out by email.</p>
+    </div>
+  </div>
+</section>
+
+<!-- CREDITS -->
+<section id="credits" style="position:relative;z-index:1;background:var(--night);padding:64px 40px;border-bottom:4px solid var(--stone-dark);display:none;">
+  <div class="section-head" style="margin-bottom:32px;">
+    <span class="section-tag">// THE PEOPLE WHO MADE THIS</span>
+    <h2 class="section-title">Special thanks for <span class="t-gold">contributing.</span></h2>
+  </div>
+  <div id="credits-list" style="display:flex;flex-wrap:wrap;gap:12px;"></div>
+</section>
+
+<footer>
+  <div class="footer-logo">BUILD DAVIS<br>A MINECRAFT WORLD PROJECT</div>
+  <div class="footer-info">
+    Map data © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap contributors</a> · ODbL<br>
+    USGS 3DEP · Overture Maps · City of Davis GIS · Chunker (Apache 2.0)<br>
+    <a href="https://builddavis.org/terms">Terms of Use</a> · <a href="https://builddavis.org/privacy">Privacy Policy</a><br>
+    Not affiliated with Mojang Studios, UC Davis, or the City of Davis
+  </div>
+</footer>
+
+<script>
+// Stars
+const sc = document.getElementById('stars');
+for(let i=0;i<80;i++){
+  const s=document.createElement('div');
+  s.className='star';
+  s.style.left=Math.random()*100+'%';
+  s.style.top=Math.random()*100+'%';
+  s.style.setProperty('--d',(2+Math.random()*4)+'s');
+  s.style.setProperty('--delay',(Math.random()*4)+'s');
+  s.style.opacity=Math.random()*.8+.2;
+  sc.appendChild(s);
+}
+
+// Scroll reveal
+const obs=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting)e.target.classList.add('visible')})},{threshold:.15});
+document.querySelectorAll('.how-card').forEach(c=>obs.observe(c));
+
+// Formspree submission — hides email, shows success state
+async function handleSubmit(e){
+  e.preventDefault();
+  const btn=document.getElementById('submit-btn');
+  btn.textContent='▶ SENDING...';
+  btn.disabled=true;
+  try{
+    const data=new FormData(e.target);
+    const res=await fetch(e.target.action,{method:'POST',body:data,headers:{'Accept':'application/json'}});
+    if(res.ok){
+      document.getElementById('form-inner').style.display='none';
+      document.getElementById('f-success').style.display='block';
+    } else {
+      btn.textContent='▶ ERROR — TRY AGAIN';
+      btn.disabled=false;
+    }
+  } catch {
+    btn.textContent='▶ ERROR — TRY AGAIN';
+    btn.disabled=false;
+  }
+}
+// OSM claim form submission
+async function handleOsmSubmit(e){
+  e.preventDefault();
+  const btn=document.getElementById('osm-submit-btn');
+  btn.textContent='▶ SUBMITTING...';
+  btn.disabled=true;
+  try{
+    const data=new FormData(e.target);
+    const res=await fetch(e.target.action,{method:'POST',body:data,headers:{'Accept':'application/json'}});
+    if(res.ok){
+      document.getElementById('osm-claim-form').style.display='none';
+      document.getElementById('osm-claim-success').style.display='block';
+    } else {
+      btn.textContent='▶ ERROR — TRY AGAIN';
+      btn.disabled=false;
+    }
+  } catch {
+    btn.textContent='▶ ERROR — TRY AGAIN';
+    btn.disabled=false;
+  }
+}
+
+// Load contributors from credits.json and render #credits section
+(async function loadCredits(){
+  const CREDITS_URL='https://raw.githubusercontent.com/coopdogGGs/builddavis-engine/main/data/credits.json';
+  try{
+    const res=await fetch(CREDITS_URL);
+    if(!res.ok) return;
+    const credits=await res.json();
+    if(!Array.isArray(credits)||credits.length===0) return;
+    const section=document.getElementById('credits');
+    const list=document.getElementById('credits-list');
+    credits.forEach(c=>{
+      const displayName=c.name||c.minecraft_username;
+      if(!displayName) return;
+      const chip=document.createElement('div');
+      chip.style.cssText='background:var(--night2);border:3px solid var(--stone-dark);padding:10px 16px;font-family:"Press Start 2P",monospace;font-size:10px;color:var(--white);line-height:1.4;';
+      const icon=c.type==='osm'?'🗺️':'🏗️';
+      chip.textContent=icon+' '+displayName;
+      chip.title=c.type==='osm'?('OSM mapper'+(c.osm_username?' · '+c.osm_username:'')):('Builder'+(c.zone?' · '+c.zone:''));
+      list.appendChild(chip);
+    });
+    section.style.display='block';
+  } catch(err){
+    // Silently fail — credits section stays hidden
+  }
+})();
+</script>

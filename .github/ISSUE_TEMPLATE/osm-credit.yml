@@ -1,0 +1,30 @@
+name: OSM Contributor Credit
+description: Claim your credit for mapping Davis on OpenStreetMap (10+ edits required)
+title: "OSM Credit: [your OSM username]"
+labels: ["osm-credit"]
+body:
+  - type: input
+    id: osm_username
+    attributes:
+      label: OSM Username
+      description: Your exact OpenStreetMap username (case-sensitive)
+      placeholder: e.g. Coopdog
+    validations:
+      required: true
+
+  - type: input
+    id: display_name
+    attributes:
+      label: Display Name
+      description: How you want to appear in the credits on builddavis.org
+      placeholder: e.g. Coopdog
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: confirm
+    attributes:
+      label: Confirmation
+      options:
+        - label: I have made 10+ changesets in the Davis area on OpenStreetMap
+          required: true
