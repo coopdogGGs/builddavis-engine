@@ -4,11 +4,11 @@
 1:1 scale Minecraft recreation of Davis, CA. 6-stage geospatial ETL pipeline (OSM/Overture/LiDAR → Arnis Rust engine → Java .mca world). Hosted on Paper 1.21.4 + GeyserMC on Apex Hosting.
 
 ## Owner
-coopdogGGs on GitHub. Project lives at `REDACTED_PATH\OneDrive\Vibe\BuildDavis`.
+coopdogGGs on GitHub. Project root referenced via repo-relative paths.
 
 ## Key Paths
 - **Pipeline code:** `Code/` (fetch.py → parse.py → fuse.py → adapter.py → transform.py)
-- **Engine (Rust):** `REDACTED_PATH\builddavis-engine`
+- **Engine (Rust):** Sibling repo `builddavis-engine`
 - **Iconic build scripts:** `Code/build_<name>.py`
 - **Staging tool:** `Code/stage.py`
 - **Preservation:** `Code/preserve_zones.py`

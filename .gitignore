@@ -4,6 +4,37 @@ backups/
 # Manifests (per-run snapshots - local only)
 manifests/
 
+# One-off fix/patch/extract scripts (contain local paths)
+Code/fix_*.py
+Code/extract_chat*.py
+Code/patch_*.py
+Code/fuse_trees_patch*.py
+Code/wire_*.py
+Code/tighten_*.py
+Code/push_docs.py
+Code/savechat.py
+Code/test_tree_api.py
+Code/check_blocks.py
+Code/check_station_coords.py
+Code/detect_grass_naip.py
+Code/detect_pools_naip.py
+Code/detect_trees_naip.py
+Code/diagnose_buildings.py
+Code/inspect_features.py
+Code/find_station2.py
+Code/fetch_ucdavis_trees.py
+Code/_debug_*.py
+Code/_poc*.py
+Code/_find_*.py
+
+# Chat transcripts (may contain credentials)
+Chat*.txt
+chat*.txt
+
+# Temp/debug scripts
+_*.py
+_*.html
+
 # Python
 __pycache__/
 *.pyc

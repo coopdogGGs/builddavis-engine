@@ -14,6 +14,7 @@
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="https://builddavis.org/assets/screenshots/og.png">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' static.cloudflareinsights.com; style-src 'self' 'unsafe-inline' fonts.googleapis.com; font-src fonts.gstatic.com; connect-src formspree.io raw.githubusercontent.com; img-src 'self' data:;">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
@@ -867,7 +868,7 @@ footer {
     <li><a href="#how">HOW</a></li>
     <li><a href="#apply">APPLY</a></li>
   </ul>
-  <a href="https://discord.gg/Rt7c6Jje" target="_blank" class="nav-discord">⌨ DISCORD</a>
+  <a href="https://discord.gg/Rt7c6Jje" target="_blank" rel="noopener noreferrer" class="nav-discord">⌨ DISCORD</a>
 </nav>
 
 <!-- HERO -->
@@ -887,7 +888,7 @@ footer {
     <div class="hero-btns">
       <a href="#map" class="px-btn px-btn-green">▶ HELP MAP DAVIS</a>
       <a href="#apply" class="px-btn px-btn-green">✦ APPLY TO BUILD</a>
-      <a href="https://discord.gg/Rt7c6Jje" target="_blank" class="px-btn" style="background:var(--sky);color:var(--white);box-shadow:0 6px 0 var(--sky-dark);">⌨ JOIN DISCORD</a>
+      <a href="https://discord.gg/Rt7c6Jje" target="_blank" rel="noopener noreferrer" class="px-btn" style="background:var(--sky);color:var(--white);box-shadow:0 6px 0 var(--sky-dark);">⌨ JOIN DISCORD</a>
     </div>
     <!-- Server addresses -->
     <div style="margin-top:28px;display:flex;gap:16px;flex-wrap:wrap;">
@@ -1098,8 +1099,8 @@ footer {
       <div class="reward-box"><strong>✦ YOUR REWARD</strong>10+ edits = a special thanks in the credits.</div>
       <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;">
         <a href="#osm-guide" class="px-btn px-btn-green">📖 LEARN MORE</a>
-        <a href="https://www.openstreetmap.org/edit#map=16/38.5449/-121.7405" target="_blank" class="px-btn px-btn-green">▶ OPEN OSM EDITOR</a>
-        <a href="https://github.com/coopdogGGs/builddavis-engine/issues/new?template=osm-credit.yml" target="_blank" class="px-btn px-btn-gold">✦ CLAIM YOUR CREDIT</a>
+        <a href="https://www.openstreetmap.org/edit#map=16/38.5449/-121.7405" target="_blank" rel="noopener noreferrer" class="px-btn px-btn-green">▶ OPEN OSM EDITOR</a>
+        <a href="https://github.com/coopdogGGs/builddavis-engine/issues/new?template=osm-credit.yml" target="_blank" rel="noopener noreferrer" class="px-btn px-btn-gold">✦ CLAIM YOUR CREDIT</a>
       </div>
     </div>
     <div class="game-mode game-mode-creative" id="build">
@@ -1226,6 +1227,7 @@ footer {
       <input type="hidden" name="_subject" value="New Build Davis Application">
       <input type="hidden" name="_next" value="">
       <button class="f-submit" id="submit-btn" type="submit">▶ SUBMIT APPLICATION</button>
+      <div style="margin-top:12px;font-size:11px;color:rgba(248,248,240,.4);line-height:1.6;">By submitting, you agree to our <a href="https://builddavis.org/privacy" style="color:var(--sky);text-decoration:underline;">Privacy Policy</a>. We only use your info to review your application.</div>
     </form>
     <div class="f-success" id="f-success">
       <span class="f-success-icon">🎮</span>
@@ -1247,7 +1249,7 @@ footer {
 <footer>
   <div class="footer-logo">BUILD DAVIS<br>A MINECRAFT WORLD PROJECT</div>
   <div class="footer-info">
-    Map data © <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap contributors</a> · ODbL<br>
+    Map data © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap contributors</a> · ODbL<br>
     USGS 3DEP · Overture Maps · City of Davis GIS · Chunker (Apache 2.0)<br>
     <a href="https://builddavis.org/terms">Terms of Use</a> · <a href="https://builddavis.org/privacy">Privacy Policy</a><br>
     Not affiliated with Mojang Studios, UC Davis, or the City of Davis
