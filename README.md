@@ -1,100 +1,95 @@
-<img src="assets/git/banner.png" width="100%" alt="Banner">
+<img src="assets/screenshots/og.png" width="100%" alt="UC Davis Water Tower in Minecraft at sunrise">
 
-# Arnis [![CI Build Status](https://github.com/louis-e/arnis/actions/workflows/ci-build.yml/badge.svg)](https://github.com/louis-e/arnis/actions) [<img alt="GitHub Release" src="https://img.shields.io/github/v/release/louis-e/arnis" />](https://github.com/louis-e/arnis/releases) [<img alt="GitHub Downloads (all assets, all releases" src="https://img.shields.io/github/downloads/louis-e/arnis/total" />](https://github.com/louis-e/arnis/releases) [![Download here](https://img.shields.io/badge/Download-here-green)](https://github.com/louis-e/arnis/releases) [![Discord](https://img.shields.io/discord/1326192999738249267?label=Discord&color=%237289da)](https://discord.gg/mA2g69Fhxq)
+# BuildDavis
 
-Arnis creates complex and accurate Minecraft Java Edition (1.17+) and Bedrock Edition worlds that reflect real-world geography, topography, and architecture.
+**The entire city of Davis, California — rebuilt block-by-block in Minecraft at 1:1 scale.**
 
-This free and open source project is designed to handle large-scale geographic data from the real world and generate detailed Minecraft worlds. The algorithm processes geospatial data from OpenStreetMap as well as elevation data to create an accurate Minecraft representation of terrain and architecture.
-Generate your hometown, big cities, and natural landscapes with ease!
+[![Website](https://img.shields.io/badge/Website-builddavis.org-5CA44B)](https://builddavis.org)
+[![Discord](https://img.shields.io/discord/1326192999738249267?label=Discord&color=%237289da)](https://discord.gg/Rt7c6Jje)
 
-_**Want to generate on mobile or want larger maps?** [MapSmith](https://arnismc.com/mapsmith/) generates worlds in your browser, no install required._
+Real LiDAR terrain. Real building heights. Real bike paths. Real valley oaks. Every structure placed from actual geodata — and hand-finished by people who know this town.
 
-![Minecraft Preview](assets/git/preview.jpg)
-<i>This Github page and [arnismc.com](https://arnismc.com) are the only official project websites. Do not download Arnis from any other website.</i>
+## Connect
 
-## :keyboard: Usage
-<img width="60%" src="assets/git/gui.png"><br>
-Download the [latest release](https://github.com/louis-e/arnis/releases/) or [compile](#trophy-open-source) the project on your own.
+| Platform | Address | Port |
+|----------|---------|------|
+| **Java Edition** | `builddavis.world` | `25606` |
+| **Bedrock** (Mobile / Switch / Xbox) | `builddavis.world` | `25606` |
 
-Choose your area on the map using the rectangle tool and select your Minecraft world - then simply click on <i>Start Generation</i>!
-Additionally, you can customize various generation settings, such as world scale, spawn point, or building interior generation.
+## Screenshots
 
-## 📚 Documentation
+<p float="left">
+  <img src="assets/screenshots/water_tower_sunrise.png" width="48%" alt="UC Davis Water Tower">
+  <img src="assets/screenshots/stadium.png" width="48%" alt="UCD Health Stadium">
+</p>
+<p float="left">
+  <img src="assets/screenshots/downtown_aerial.png" width="48%" alt="Downtown Davis aerial">
+  <img src="assets/screenshots/carousel.png" width="48%" alt="Flying Carousel of the Delta Breeze">
+</p>
 
-<img src="assets/git/documentation.png" width="100%" alt="Banner">
+## World Stats
 
-Full documentation is available in the [GitHub Wiki](https://github.com/louis-e/arnis/wiki/), covering topics such as technical explanations, FAQs, contribution guidelines and roadmaps.
+| Metric | Value |
+|--------|-------|
+| Total blocks | ~3.0 billion |
+| Buildings | ~20,000 |
+| Trees | 48,000 |
+| Road segments | 7,000 |
+| Bike paths | 100 miles |
+| Iconic landmarks | 13 hand-built |
 
-[backgroundvid.webm](https://github.com/user-attachments/assets/420acc19-a850-418e-8397-1a45b05582ab)
+## How It Works
 
-## :trophy: Open Source
-#### Key objectives of this project
-- **Modularity**: Ensure that all components (e.g., data fetching, processing, and world generation) are cleanly separated into distinct modules for better maintainability and scalability.
-- **Performance Optimization**: We aim to keep a good performance and speed of the world generation process.
-- **Comprehensive Documentation**: Detailed in-code documentation for a clear structure and logic.
-- **User-Friendly Experience**: Focus on making the project easy to use for end users.
-- **Cross-Platform Support**: We want this project to run smoothly on Windows, macOS, and Linux.
+BuildDavis uses a 6-stage geospatial ETL pipeline to convert real-world data into Minecraft:
 
-#### How to contribute
-This project is open source and welcomes contributions from everyone! Whether you're interested in fixing bugs, improving performance, adding new features, or enhancing documentation, your input is valuable. Simply fork the repository, make your changes, and submit a pull request. Please respect the above mentioned key objectives. Contributions of all levels are appreciated, and your efforts help improve this tool for everyone.
+1. **Fetch** — Pull building footprints, roads, trees, and infrastructure from OpenStreetMap, Overture Maps, USGS LiDAR, and City of Davis GIS
+2. **Parse** — Extract and classify 94,000+ geographic elements
+3. **Fuse** — Merge overlapping data sources with priority rules (Davis GIS > LiDAR > Overture > OSM)
+4. **Enrich** — Validate building heights, inject facade colors, apply zone-specific material palettes
+5. **Adapt** — Transform enriched geodata into block placement instructions
+6. **Render** — Generate Minecraft Java Edition region files (.mca) with 15-block bedrock depth, interior generation, and roof shapes
 
-Command line Build: ```cargo run --no-default-features -- --terrain --path="C:/YOUR_PATH/.minecraft/saves/worldname" --bbox="min_lat,min_lng,max_lat,max_lng"```<br>
-GUI Build: ```cargo run```<br>
+Iconic landmarks (Water Tower, Amtrak Station, Stadium, Carousel, Egghead sculptures, etc.) are hand-built using a custom StructureBuilder → NBT pipeline and placed at their real GPS coordinates.
 
-After your pull request was merged, I will take care of regularly creating update releases which will include your changes.
+## Contribute
 
-If you are using Nix, you can run the program directly with `nix run github:louis-e/arnis -- --terrain --path=YOUR_PATH/.minecraft/saves/worldname --bbox="min_lat,min_lng,max_lat,max_lng"`
+**Two ways to help — no Minecraft required for the first:**
 
-## :star: Star History
+### 🗺️ Map Davis (No Minecraft needed)
+Add real-world detail to [OpenStreetMap](https://www.openstreetmap.org/edit#map=16/38.5449/-121.7405) — benches, bike racks, trees, shop names. Your edits automatically appear in the next world generation.
 
-<a href="https://star-history.com/#louis-e/arnis&Date">
- <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=louis-e/arnis&Date&theme=dark" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=louis-e/arnis&Date&type=Date" />
-   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=louis-e/arnis&Date&type=Date" />
- </picture>
-</a>
+### 🔨 Build Davis (Minecraft builders)
+Apply for builder access at [builddavis.org](https://builddavis.org/#apply). Claim a zone, get the style guide, and make your neighborhood look exactly like the real thing.
 
-## :newspaper: Academic & Press Recognition
+## Tech Stack
 
-<img src="assets/git/recognition.png" width="100%" alt="Banner">
+- **World generation:** Custom Python pipeline (fetch → parse → fuse → adapt → render)
+- **Render engine:** Rust-based .mca region file generator
+- **Terrain:** USGS 3DEP LiDAR (1m resolution DEM)
+- **Data sources:** OpenStreetMap, Overture Maps, City of Davis GIS, UC Davis Tree Database
+- **Server:** Paper 1.21.4 + GeyserMC (cross-platform Java + Bedrock)
+- **Hosting:** Apex Hosting
+- **Website:** Static HTML on GitHub Pages at [builddavis.org](https://builddavis.org)
 
-Arnis has been recognized in various academic and press publications after gaining more attention in December 2024.
+## Placed Landmarks
 
-[Building realistic Minecraft worlds with Open Data on AWS: How Arnis uses elevation datasets at scale](https://aws.amazon.com/de/blogs/publicsector/building-realistic-minecraft-worlds-with-open-data-on-aws-how-arnis-uses-elevation-datasets-at-scale/)
+| Landmark | Type |
+|----------|------|
+| UC Davis Water Tower | 48-block tall elevated tank with "UC DAVIS" lettering |
+| Davis Amtrak Station | Mission Revival architecture, arched colonnade |
+| UCD Health Stadium | Full oval track, bleachers, end zones, goal posts |
+| Varsity Theatre | Art Deco marquee on 2nd Street |
+| Toad Tunnel | Toad Hollow art installation |
+| Manetti Shrem Museum | Grand Canopy with 68 columns, two pavilions |
+| Flying Carousel | Octagonal pavilion with hand-carved animals |
+| 7 Egghead Sculptures | Yin & Yang, Bookhead, See/Hear No Evil, Eye on Mrak, Stargazer |
 
-[Floodcraft: Game-based Interactive Learning Environment using Minecraft for Flood Mitigation and Preparedness for K-12 Education](https://www.researchgate.net/publication/384644535_Floodcraft_Game-based_Interactive_Learning_Environment_using_Minecraft_for_Flood_Mitigation_and_Preparedness_for_K-12_Education)
+## License
 
-[Hackaday: Bringing OpenStreetMap Data into Minecraft](https://hackaday.com/2024/12/30/bringing-openstreetmap-data-into-minecraft/)
+This project is a fork with significant modifications. See [LICENSE](LICENSE) for details.
 
-[TomsHardware: Minecraft Tool Lets You Create Scale Replicas of Real-World Locations](https://www.tomshardware.com/video-games/pc-gaming/minecraft-tool-lets-you-create-scale-replicas-of-real-world-locations-arnis-uses-geospatial-data-from-openstreetmap-to-generate-minecraft-maps)
+## Links
 
-[XDA Developers: Hometown Minecraft Map: Arnis](https://www.xda-developers.com/hometown-minecraft-map-arnis/)
-
-Free to use press assets, including screenshots and logos, can be found [here](https://drive.google.com/file/d/1T1IsZSyT8oa6qAO_40hVF5KR8eEVCJjo/view?usp=sharing).
-
-## :copyright: License Information
-Copyright (c) 2022-2025 Louis Erbkamm (louis-e)
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.[^3]
-
-Download Arnis only from the official source https://arnismc.com or https://github.com/louis-e/arnis/. Every other website providing a download and claiming to be affiliated with the project is unofficial and may be malicious.
-
-The logo was made by @nxfx21.
-
-
-[^1]: https://en.wikipedia.org/wiki/OpenStreetMap
-
-[^2]: https://en.wikipedia.org/wiki/Arnis,_Germany
-
-[^3]: https://github.com/louis-e/arnis/blob/main/LICENSE
+- **Website:** [builddavis.org](https://builddavis.org)
+- **Discord:** [discord.gg/Rt7c6Jje](https://discord.gg/Rt7c6Jje)
+- **Server:** `builddavis.world:25606`
