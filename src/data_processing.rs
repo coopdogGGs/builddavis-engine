@@ -106,6 +106,10 @@ pub fn generate_world_with_options(
         outlines
     };
 
+    // Debug counters for building pipeline
+    let mut dbg_building_dispatched: u64 = 0;
+    let mut dbg_building_suppressed: u64 = 0;
+
     // Process all elements
     for element in elements.into_iter() {
         process_pb.inc(1);
@@ -131,6 +135,7 @@ pub fn generate_world_with_options(
                     // Skip building outlines that are suppressed by building relations with parts.
                     // The individual building:part ways will render instead.
                     if !suppressed_building_outlines.contains(&way.id) {
+                        dbg_building_dispatched += 1;
                         buildings::generate_buildings(
                             &mut editor,
                             way,
@@ -139,6 +144,8 @@ pub fn generate_world_with_options(
                             None,
                             &flood_fill_cache,
                         );
+                    } else {
+                        dbg_building_suppressed += 1;
                     }
                 } else if way.tags.contains_key("highway") {
                     highways::generate_highways(
@@ -184,7 +191,7 @@ pub fn generate_world_with_options(
                         waterways::generate_waterways(&mut editor, way);
                     }
                 } else if way.tags.contains_key("bridge") {
-                    //bridges::generate_bridges(&mut editor, way, ground_level); // TODO FIX
+                    bridges::generate_bridges(&mut editor, way);
                 } else if way.tags.contains_key("railway") {
                     railways::generate_railways(&mut editor, way);
                 } else if way.tags.contains_key("roller_coaster") {
@@ -301,6 +308,9 @@ pub fn generate_world_with_options(
     }
 
     process_pb.finish();
+
+    // Building debug summary
+    println!("[BUILDING DEBUG] dispatched={}, suppressed={}", dbg_building_dispatched, dbg_building_suppressed);
 
     // Drop remaining caches
     drop(highway_connectivity);

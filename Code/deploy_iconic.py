@@ -35,9 +35,10 @@ DATA_DIR = SCRIPT_DIR.parent / "data"
 STAGE_X, STAGE_Y, STAGE_Z = -100, 49, -100
 
 # Arnis world parameters — must match render metadata.json
-BBOX_MIN_LAT, BBOX_MAX_LAT = 38.530, 38.590
-BBOX_MIN_LON, BBOX_MAX_LON = -121.760, -121.710
-WORLD_X, WORLD_Z = 4347, 6671
+# Expanded bbox: full Davis + El Macero + Golf Course + Airport (Apr 2026)
+BBOX_MIN_LAT, BBOX_MAX_LAT = 38.527, 38.591
+BBOX_MIN_LON, BBOX_MAX_LON = -121.812, -121.670
+WORLD_X, WORLD_Z = 12347, 7116  # from Arnis metadata.json (Apr 2026 render)
 
 
 def geo_to_mc(lat: float, lon: float) -> tuple[int, int]:
@@ -45,6 +46,15 @@ def geo_to_mc(lat: float, lon: float) -> tuple[int, int]:
     rx = (lon - BBOX_MIN_LON) / (BBOX_MAX_LON - BBOX_MIN_LON)
     rz = 1.0 - (lat - BBOX_MIN_LAT) / (BBOX_MAX_LAT - BBOX_MIN_LAT)
     return int(rx * WORLD_X), int(rz * WORLD_Z)
+
+
+def mc_to_geo(mc_x: int, mc_z: int) -> tuple[float, float]:
+    """Convert Minecraft X/Z back to real-world lat/lon."""
+    rx = mc_x / WORLD_X
+    rz = mc_z / WORLD_Z
+    lon = BBOX_MIN_LON + rx * (BBOX_MAX_LON - BBOX_MIN_LON)
+    lat = BBOX_MIN_LAT + (1.0 - rz) * (BBOX_MAX_LAT - BBOX_MIN_LAT)
+    return lat, lon
 
 
 def locate_osm_feature(osm_id: int) -> tuple[float, float]:

@@ -311,3 +311,191 @@ def test_find_build_script_missing_raises(tmp_path: Path):
             stage._find_build_script("nonexistent")
     finally:
         stage.CODE_DIR = orig
+
+
+# ── 8. OSM collision detection ────────────────────────────────────────────────
+
+def _make_enriched_overpass(tmp_path: Path, buildings: list[dict]) -> Path:
+    """Create a minimal enriched_overpass.json with given building ways."""
+    nodes = []
+    ways = []
+    nid = 1000
+
+    for b in buildings:
+        # Create 4 corner nodes from min/max lat/lon
+        node_ids = []
+        corners = [
+            (b["min_lat"], b["min_lon"]),
+            (b["min_lat"], b["max_lon"]),
+            (b["max_lat"], b["max_lon"]),
+            (b["max_lat"], b["min_lon"]),
+        ]
+        for lat, lon in corners:
+            nodes.append({"type": "node", "id": nid, "lat": lat, "lon": lon})
+            node_ids.append(nid)
+            nid += 1
+        node_ids.append(node_ids[0])  # close the polygon
+        ways.append({
+            "type": "way",
+            "id": b["osm_id"],
+            "nodes": node_ids,
+            "tags": b.get("tags", {"building": "yes"}),
+        })
+
+    data = {"elements": nodes + ways}
+    path = tmp_path / "enriched_overpass.json"
+    path.write_text(json.dumps(data), encoding="utf-8")
+    return path
+
+
+def test_scan_osm_collisions_no_overlap():
+    """No collisions when asset is far from any building."""
+    import tempfile
+    with tempfile.TemporaryDirectory() as td:
+        td = Path(td)
+        eo = _make_enriched_overpass(td, [{
+            "osm_id": 9999,
+            "min_lat": 38.540, "max_lat": 38.541,
+            "min_lon": -121.740, "max_lon": -121.739,
+            "tags": {"building": "yes"},
+        }])
+        # Place asset far away (MC origin 0,0 → bottom-left corner of the map)
+        result = stage._scan_osm_collisions(0, 7000, 10, 10, eo_path=eo)
+        assert result == [], f"Expected no collisions, got {len(result)}"
+
+
+def test_scan_osm_collisions_full_overlap():
+    """Detect engulfed collision when asset bbox fully covers a building."""
+    import tempfile
+    with tempfile.TemporaryDirectory() as td:
+        td = Path(td)
+        # Small building in the middle of the map
+        eo = _make_enriched_overpass(td, [{
+            "osm_id": 5555,
+            "min_lat": 38.5450, "max_lat": 38.5452,
+            "min_lon": -121.7410, "max_lon": -121.7407,
+            "tags": {"building": "commercial", "name": "Test Shop"},
+        }])
+        # Convert building centroid to MC → place a large asset covering it
+        from deploy_iconic import geo_to_mc as di_geo_to_mc
+        cx, cz = di_geo_to_mc(38.5451, -121.74085)
+        ox = cx - 50   # 100-block wide asset centered on building
+        oz = cz - 50
+        result = stage._scan_osm_collisions(ox, oz, 100, 100, eo_path=eo)
+        assert len(result) == 1, f"Expected 1 collision, got {len(result)}"
+        assert result[0]["osm_id"] == 5555
+        assert result[0]["classification"] == "engulfed"
+        assert result[0]["overlap_pct"] > 80
+
+
+def test_scan_osm_collisions_excluded_building():
+    """Buildings in ICONIC_EXCLUSIONS should not appear in collision results."""
+    import tempfile
+    with tempfile.TemporaryDirectory() as td:
+        td = Path(td)
+        eo = _make_enriched_overpass(td, [{
+            "osm_id": 62095055,
+            "min_lat": 38.543, "max_lat": 38.544,
+            "min_lon": -121.738, "max_lon": -121.737,
+            "tags": {"building": "train_station"},
+        }])
+        from deploy_iconic import geo_to_mc as di_geo_to_mc
+        cx, cz = di_geo_to_mc(38.5435, -121.7375)
+        result = stage._scan_osm_collisions(
+            cx - 50, cz - 50, 100, 100,
+            eo_path=eo,
+            exclusions={62095055},
+        )
+        assert result == [], "Excluded building should not appear in collisions"
+
+
+def test_scan_osm_collisions_neighbor_expected():
+    """Neighbor overlaps with expect_neighbors=True are marked as expected."""
+    import tempfile
+    with tempfile.TemporaryDirectory() as td:
+        td = Path(td)
+        # Two buildings: one fully overlapping, one barely touching (neighbor)
+        eo = _make_enriched_overpass(td, [
+            {
+                "osm_id": 1001,
+                "min_lat": 38.5450, "max_lat": 38.5452,
+                "min_lon": -121.7410, "max_lon": -121.7408,
+                "tags": {"building": "commercial", "name": "Target Bldg"},
+            },
+            {
+                "osm_id": 1002,
+                "min_lat": 38.5452, "max_lat": 38.5455,
+                "min_lon": -121.7410, "max_lon": -121.7408,
+                "tags": {"building": "retail", "name": "Adjacent Shop"},
+            },
+        ])
+        from deploy_iconic import geo_to_mc as di_geo_to_mc
+        # Place asset exactly on building 1001
+        cx, cz = di_geo_to_mc(38.5451, -121.7409)
+        # Small asset covering only building 1001 footprint, barely touching 1002
+        ox = cx - 5
+        oz = cz - 5
+        result = stage._scan_osm_collisions(
+            ox, oz, 10, 10,
+            eo_path=eo,
+            expect_neighbors=True,
+        )
+        # Should find at least the target building
+        assert len(result) >= 1
+        # If neighbor detected, it should be marked expected
+        neighbors = [c for c in result if c["classification"] == "neighbor"]
+        for n in neighbors:
+            assert n["expected"] is True, f"Neighbor {n['osm_id']} should be expected"
+
+
+def test_classify_overlap_thresholds():
+    """Verify overlap classification thresholds."""
+    assert stage._classify_overlap(0.90) == "engulfed"
+    assert stage._classify_overlap(0.80) == "engulfed"
+    assert stage._classify_overlap(0.50) == "partial"
+    assert stage._classify_overlap(0.20) == "partial"
+    assert stage._classify_overlap(0.19) == "neighbor"
+    assert stage._classify_overlap(0.05) == "neighbor"
+    assert stage._classify_overlap(0.00) == "neighbor"
+
+
+def test_bbox_overlap_fraction_no_overlap():
+    """Non-overlapping bboxes → 0.0."""
+    frac = stage._bbox_overlap_fraction(
+        0.0, 1.0, 0.0, 1.0,   # asset
+        2.0, 3.0, 2.0, 3.0,   # building (far away)
+    )
+    assert frac == 0.0
+
+
+def test_bbox_overlap_fraction_full():
+    """Asset fully contains building → 1.0."""
+    frac = stage._bbox_overlap_fraction(
+        0.0, 10.0, 0.0, 10.0,   # asset (large)
+        2.0, 3.0,  2.0, 3.0,    # building (small, inside)
+    )
+    assert frac == 1.0
+
+
+def test_bbox_overlap_fraction_half():
+    """Asset covers exactly half of building → ~0.5."""
+    frac = stage._bbox_overlap_fraction(
+        0.0, 5.0, 0.0, 10.0,   # asset
+        0.0, 10.0, 0.0, 10.0,  # building
+    )
+    assert abs(frac - 0.5) < 0.01
+
+
+def test_load_iconic_exclusions_parses_set():
+    """_load_iconic_exclusions should return at least the Amtrak station ID."""
+    exclusions = stage._load_iconic_exclusions()
+    assert 62095055 in exclusions, "Amtrak station (62095055) should be in exclusions"
+
+
+def test_scan_osm_collisions_empty_eo():
+    """Missing enriched_overpass.json → empty collision list (not an error)."""
+    result = stage._scan_osm_collisions(
+        0, 0, 10, 10,
+        eo_path=Path("/nonexistent/enriched_overpass.json"),
+    )
+    assert result == []

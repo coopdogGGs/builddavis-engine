@@ -1,8 +1,7 @@
-<<<<<<< HEAD
 # Backups (large zip files)
 backups/
 
-# Manifests (per-run snapshots — local only)
+# Manifests (per-run snapshots - local only)
 manifests/
 
 # Python
@@ -14,19 +13,13 @@ __pycache__/
 data/*.tif
 data/*.laz
 
-# Credentials — never commit
-.env
-
-# OS
-.DS_Store
-Thumbs.db
-=======
-/wiki
-*.mcworld
-
-# Environment files
+# Credentials - never commit
 .env
 /.direnv
+
+# Server properties (contains RCON password)
+server.properties
+server/server.properties
 
 # Build artifacts
 /target
@@ -41,7 +34,6 @@ Thumbs.db
 *.ntvs*
 *.njsproj
 *.sln
-*.ps1
 
 # System files
 .DS_Store
@@ -68,9 +60,10 @@ gen/
 *.bak
 *.old
 *.orig
+/wiki
+*.mcworld
 
 # Ignore all in flake directory except specific files
 /flake/*
 !/flake/flake.nix
 !/flake/flake.lock
->>>>>>> origin/main

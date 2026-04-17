@@ -15,14 +15,16 @@ sys.path.insert(0, os.path.dirname(__file__))
 from rcon_cmd import rcon
 
 # ── World config ──────────────────────────────────────────────────────
-BBOX_MIN_LAT, BBOX_MAX_LAT = 38.530, 38.555
-BBOX_MIN_LON, BBOX_MAX_LON = -121.760, -121.725
-WORLD_X, WORLD_Z = 3043, 2779
+BBOX_MIN_LAT, BBOX_MAX_LAT = 38.527, 38.591
+BBOX_MIN_LON, BBOX_MAX_LON = -121.812, -121.670
+WORLD_X, WORLD_Z = 12347, 7116  # from Arnis metadata.json (Apr 2026 render)
 GROUND_Y = 49
 
-RCON_HOST = "127.0.0.1"
-RCON_PORT = 25575
-RCON_PW = "REDACTED_RCON_PASS"
+from dotenv import load_dotenv
+load_dotenv(Path(__file__).resolve().parent.parent / '.env')
+RCON_HOST = os.environ.get('RCON_HOST', '127.0.0.1')
+RCON_PORT = int(os.environ.get('RCON_PORT', '25575'))
+RCON_PW = os.environ['RCON_PASS']
 
 # ── Asset registry ────────────────────────────────────────────────────
 # Each asset: name, osm_id, expected lat/lon from OSM, config origin (top-left),
@@ -58,7 +60,7 @@ def geo_to_mc(lat: float, lon: float) -> tuple[int, int]:
     """Convert lat/lon to MC X/Z."""
     rx = (lon - BBOX_MIN_LON) / (BBOX_MAX_LON - BBOX_MIN_LON)
     rz = 1.0 - (lat - BBOX_MIN_LAT) / (BBOX_MAX_LAT - BBOX_MIN_LAT)
-    return int(rx * WORLD_X), int(rz * WORLD_Z)
+    return round(rx * WORLD_X), round(rz * WORLD_Z)
 
 
 def mc_to_geo(mc_x: int, mc_z: int) -> tuple[float, float]:

@@ -50,9 +50,11 @@ SERVER_JAR = "paper-1.21.11-69.jar"
 JAVA_HOME = r"C:\Program Files\Eclipse Adoptium\jdk-21.0.10.7-hotspot"
 JAVA_EXE = Path(JAVA_HOME) / "bin" / "java.exe"
 
-RCON_HOST = "127.0.0.1"
-RCON_PORT = 25575
-RCON_PASS = "REDACTED_RCON_PASS"
+from dotenv import load_dotenv
+load_dotenv(Path(__file__).resolve().parent.parent / '.env')
+RCON_HOST = os.environ.get('RCON_HOST', '127.0.0.1')
+RCON_PORT = int(os.environ.get('RCON_PORT', '25575'))
+RCON_PASS = os.environ['RCON_PASS']
 SERVER_PORT = 25565
 
 PROPERTIES_FILE = SERVER_DIR / "server.properties"

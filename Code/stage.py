@@ -5,7 +5,7 @@ Usage:
   python Code/stage.py <name> --unstage               # remove from staging, restore grass
   python Code/stage.py <name> --live --osm-id <ID>   # final real placement (by OSM way ID)
   python Code/stage.py <name> --live --lat <LAT> --lon <LON>  # final real placement (explicit coords)
-  python Code/stage.py --setup-pad                    # one-time: create 60x60 staging pad
+  python Code/stage.py --setup-pad                    # one-time: create 200x200 staging pad
 
 Examples:
   python Code/stage.py --setup-pad
@@ -35,24 +35,26 @@ FUNC_DIR = (
 )
 
 # ── Staging pad constants ──────────────────────────────────────────────────────
-# 60×60 flat pad at X=[-280,-221], Z=[-280,-221], Y=49
+# 200×200 flat pad at X=[-280,-81], Z=[-280,-81], Y=49
 PAD_X1   = -280
 PAD_Z1   = -280
-PAD_SIZE = 60           # pad occupies [-280, -221] on each axis
+PAD_SIZE = 200          # pad occupies [-280, -81] on each axis
 PAD_Y    = 49
-PAD_X2   = PAD_X1 + PAD_SIZE - 1   # -221
-PAD_Z2   = PAD_Z1 + PAD_SIZE - 1   # -221
-PAD_CENTER_X = PAD_X1 + PAD_SIZE // 2   # -250
-PAD_CENTER_Z = PAD_Z1 + PAD_SIZE // 2   # -250
+PAD_X2   = PAD_X1 + PAD_SIZE - 1   # -81
+PAD_Z2   = PAD_Z1 + PAD_SIZE - 1   # -81
+PAD_CENTER_X = PAD_X1 + PAD_SIZE // 2   # -180
+PAD_CENTER_Z = PAD_Z1 + PAD_SIZE // 2   # -180
 
 # ── Ground materials ──────────────────────────────────────────────────────────
 ARNIS_GROUND   = "minecraft:stone"         # --city-boundaries flag, deterministic
 STAGING_GROUND = "minecraft:grass_block"
 
-# ── RCON ──────────────────────────────────────────────────────────────────────
-RCON_HOST = "127.0.0.1"
-RCON_PORT = 25575
-RCON_PW   = "REDACTED_RCON_PASS"
+# ── RCON (from .env) ──────────────────────────────────────────────────────────
+from dotenv import load_dotenv
+load_dotenv(CODE_DIR.parent / '.env')
+RCON_HOST = os.environ.get('RCON_HOST', '127.0.0.1')
+RCON_PORT = int(os.environ.get('RCON_PORT', '25575'))
+RCON_PW   = os.environ['RCON_PASS']
 
 # ── Import deps from sibling Code/ scripts ────────────────────────────────────
 sys.path.insert(0, str(CODE_DIR))
@@ -63,7 +65,9 @@ from deploy_iconic import (
     geo_to_mc,
     locate_osm_feature,
     load_structure_builder,
+    mc_to_geo,
     _ascii_safe,
+    DATA_DIR,
 )
 from rcon_cmd import rcon
 
@@ -329,6 +333,258 @@ def _print_conflict_report(name: str, ox: int, oz: int, conflicts: list) -> None
     print()
 
 
+# ── OSM building collision detection ──────────────────────────────────────────
+
+def _load_iconic_exclusions() -> set[int]:
+    """Read ICONIC_EXCLUSIONS from adapter.py without importing the full module.
+
+    Parses the set literal from the source file so we don't trigger the heavy
+    adapter import (which requires geopandas, rasterio, etc.).
+    """
+    adapter_path = CODE_DIR / "adapter.py"
+    if not adapter_path.exists():
+        return set()
+    text = adapter_path.read_text(encoding="utf-8")
+    # Find the ICONIC_EXCLUSIONS block: set literal spanning one or more lines
+    import ast
+    m = re.search(r'ICONIC_EXCLUSIONS[^=]*=\s*(\{[^}]+\})', text)
+    if not m:
+        return set()
+    try:
+        return set(ast.literal_eval(m.group(1)))
+    except Exception:
+        return set()
+
+
+def _load_osm_buildings(
+    eo_path: Path | None = None,
+) -> list[dict]:
+    """Load all building ways from enriched_overpass.json with their bboxes.
+
+    Returns list of dicts, each with:
+      osm_id, tags, min_lat, max_lat, min_lon, max_lon
+    """
+    if eo_path is None:
+        eo_path = DATA_DIR / "enriched_overpass.json"
+    if not eo_path.exists():
+        return []
+
+    data = json.loads(eo_path.read_text(encoding="utf-8"))
+
+    # Build node lookup table (id → (lat, lon))
+    node_map: dict[int, tuple[float, float]] = {}
+    ways: list[dict] = []
+    for el in data.get("elements", []):
+        if el.get("type") == "node" and "lat" in el:
+            node_map[el["id"]] = (el["lat"], el["lon"])
+        elif el.get("type") == "way":
+            tags = el.get("tags", {})
+            # Include anything Arnis renders as a physical structure
+            if any(k in tags for k in (
+                "building", "man_made", "amenity", "historic", "tourism",
+            )):
+                ways.append(el)
+
+    # Resolve node coords → bounding boxes
+    buildings: list[dict] = []
+    for w in ways:
+        lats, lons = [], []
+        for nid in w.get("nodes", []):
+            if nid in node_map:
+                lat, lon = node_map[nid]
+                lats.append(lat)
+                lons.append(lon)
+        if not lats:
+            continue
+        buildings.append({
+            "osm_id": w["id"],
+            "tags": w.get("tags", {}),
+            "min_lat": min(lats), "max_lat": max(lats),
+            "min_lon": min(lons), "max_lon": max(lons),
+        })
+    return buildings
+
+
+def _bbox_overlap_fraction(
+    a_min_lat: float, a_max_lat: float, a_min_lon: float, a_max_lon: float,
+    b_min_lat: float, b_max_lat: float, b_min_lon: float, b_max_lon: float,
+) -> float:
+    """Return fraction (0.0–1.0) of building B covered by asset A's bbox."""
+    # Intersection
+    i_min_lat = max(a_min_lat, b_min_lat)
+    i_max_lat = min(a_max_lat, b_max_lat)
+    i_min_lon = max(a_min_lon, b_min_lon)
+    i_max_lon = min(a_max_lon, b_max_lon)
+
+    if i_min_lat >= i_max_lat or i_min_lon >= i_max_lon:
+        return 0.0
+
+    i_area = (i_max_lat - i_min_lat) * (i_max_lon - i_min_lon)
+    b_area = (b_max_lat - b_min_lat) * (b_max_lon - b_min_lon)
+    if b_area <= 0:
+        return 0.0
+    return min(i_area / b_area, 1.0)
+
+
+def _classify_overlap(fraction: float) -> str:
+    """Classify overlap fraction into a human-readable label."""
+    if fraction >= 0.80:
+        return "engulfed"
+    if fraction >= 0.20:
+        return "partial"
+    return "neighbor"
+
+
+def _scan_osm_collisions(
+    ox: int, oz: int, width: int, depth: int,
+    eo_path: Path | None = None,
+    exclusions: set[int] | None = None,
+    expect_neighbors: bool = False,
+) -> list[dict]:
+    """Scan enriched_overpass.json for OSM buildings that overlap the asset footprint.
+
+    Args:
+        ox, oz: SW corner of asset in MC coordinates
+        width, depth: asset footprint in blocks
+        eo_path: path to enriched_overpass.json (defaults to data/ dir)
+        exclusions: OSM way IDs already in ICONIC_EXCLUSIONS (filtered out)
+        expect_neighbors: if True, "neighbor" overlaps are marked as expected
+
+    Returns list of collision dicts:
+        [{osm_id, tags, overlap_pct, classification, expected, centroid_lat, centroid_lon}]
+    """
+    if exclusions is None:
+        exclusions = _load_iconic_exclusions()
+
+    buildings = _load_osm_buildings(eo_path)
+    if not buildings:
+        return []
+
+    # Convert asset footprint corners to lat/lon
+    asset_sw_lat, asset_sw_lon = mc_to_geo(ox, oz + depth)
+    asset_ne_lat, asset_ne_lon = mc_to_geo(ox + width, oz)
+
+    # Ensure min < max (mc_to_geo Z-axis is inverted)
+    a_min_lat = min(asset_sw_lat, asset_ne_lat)
+    a_max_lat = max(asset_sw_lat, asset_ne_lat)
+    a_min_lon = min(asset_sw_lon, asset_ne_lon)
+    a_max_lon = max(asset_sw_lon, asset_ne_lon)
+
+    collisions: list[dict] = []
+    for bldg in buildings:
+        oid = bldg["osm_id"]
+
+        # Skip buildings already in ICONIC_EXCLUSIONS
+        if oid in exclusions:
+            continue
+
+        # Quick rejection: no bbox overlap at all
+        if (bldg["max_lat"] < a_min_lat or bldg["min_lat"] > a_max_lat or
+                bldg["max_lon"] < a_min_lon or bldg["min_lon"] > a_max_lon):
+            continue
+
+        fraction = _bbox_overlap_fraction(
+            a_min_lat, a_max_lat, a_min_lon, a_max_lon,
+            bldg["min_lat"], bldg["max_lat"], bldg["min_lon"], bldg["max_lon"],
+        )
+        if fraction <= 0:
+            continue
+
+        classification = _classify_overlap(fraction)
+        expected = expect_neighbors and classification == "neighbor"
+
+        centroid_lat = (bldg["min_lat"] + bldg["max_lat"]) / 2
+        centroid_lon = (bldg["min_lon"] + bldg["max_lon"]) / 2
+
+        collisions.append({
+            "osm_id": oid,
+            "tags": bldg["tags"],
+            "overlap_pct": round(fraction * 100, 1),
+            "classification": classification,
+            "expected": expected,
+            "centroid_lat": centroid_lat,
+            "centroid_lon": centroid_lon,
+        })
+
+    # Sort: engulfed first, then partial, then neighbor
+    rank = {"engulfed": 0, "partial": 1, "neighbor": 2}
+    collisions.sort(key=lambda c: (rank.get(c["classification"], 9), -c["overlap_pct"]))
+    return collisions
+
+
+def _print_osm_collision_report(name: str, collisions: list[dict]) -> None:
+    """Print a human-readable OSM building collision report."""
+    unexpected = [c for c in collisions if not c["expected"]]
+    expected   = [c for c in collisions if c["expected"]]
+
+    print()
+    print("  ╔══════════════════════════════════════════════════════════════╗")
+    print(f"  ║  [!] OSM BUILDING COLLISION — '{name}'                      ")
+    print(f"  ║     {len(collisions)} building(s) overlap this asset's footprint     ")
+    if expected:
+        print(f"  ║     ({len(expected)} neighbor(s) marked as expected)               ")
+    print("  ╚══════════════════════════════════════════════════════════════╝")
+    print()
+
+    for c in collisions:
+        tags = c["tags"]
+        btype = tags.get("building", tags.get("man_made", tags.get("amenity", "?")))
+        bname = tags.get("name", "(unnamed)")
+        label = c["classification"].upper()
+        pct   = c["overlap_pct"]
+        exp   = " (expected — integration asset)" if c["expected"] else ""
+
+        print(f"  [{label:>8}] way {c['osm_id']}  \"{bname}\"  ({btype})  — {pct}% overlap{exp}")
+
+    # Remediation hints for unexpected collisions
+    if unexpected:
+        print()
+        print("  Suggested actions:")
+        for c in unexpected:
+            if c["classification"] == "engulfed":
+                print(f"    • Add way {c['osm_id']} to ICONIC_EXCLUSIONS in adapter.py")
+                print(f"      (prevents Arnis from rendering it; re-run pipeline after)")
+            elif c["classification"] == "partial":
+                print(f"    • way {c['osm_id']}: consider --offset to avoid, or add to exclusions")
+            else:
+                print(f"    • way {c['osm_id']}: neighbor — likely safe, but verify visually")
+    print()
+
+
+def _add_to_iconic_exclusions(way_ids: list[int]) -> bool:
+    """Append way IDs to ICONIC_EXCLUSIONS in adapter.py.
+
+    Returns True if the file was modified successfully.
+    """
+    adapter_path = CODE_DIR / "adapter.py"
+    if not adapter_path.exists():
+        print("[stage] ERROR: adapter.py not found — cannot add exclusions.")
+        return False
+
+    text = adapter_path.read_text(encoding="utf-8")
+
+    # Find the closing brace of ICONIC_EXCLUSIONS
+    pattern = re.compile(
+        r'(ICONIC_EXCLUSIONS[^{]*\{[^}]*)'
+        r'(\n\s*\})',
+    )
+    m = pattern.search(text)
+    if not m:
+        print("[stage] ERROR: Could not locate ICONIC_EXCLUSIONS set in adapter.py")
+        return False
+
+    # Build insertion lines
+    new_lines = ""
+    for wid in way_ids:
+        new_lines += f"\n        {wid},   # added by stage.py --add-exclusion"
+    new_text = text[:m.end(1)] + new_lines + text[m.start(2):]
+
+    adapter_path.write_text(new_text, encoding="utf-8")
+    print(f"[stage] Added {len(way_ids)} way ID(s) to ICONIC_EXCLUSIONS in adapter.py")
+    print("[stage] REMINDER: Re-run the pipeline + Arnis for this to take effect on new worlds.")
+    return True
+
+
 # ── State helpers ──────────────────────────────────────────────────────────────
 
 def _load_state() -> dict:
@@ -458,7 +714,7 @@ def _validate_blocks(sb) -> list[str]:
 # ── Sub-commands ───────────────────────────────────────────────────────────────
 
 def cmd_setup_pad() -> None:
-    """Create the permanent 60×60 flat staging pad (run once)."""
+    """Create the permanent 200×200 flat staging pad (run once)."""
     print(
         f"[stage] Setting up staging pad: "
         f"X={PAD_X1}..{PAD_X2}, Y={PAD_Y}, Z={PAD_Z1}..{PAD_Z2}"
@@ -567,18 +823,29 @@ def _score_position(
     ideal_oz: int,
     region_dir: Path,
     y: int = PAD_Y,
-) -> tuple[int, str | None]:
-    """Score one grid candidate: return (conflict_count, error_or_None)."""
+    osm_buildings: list[dict] | None = None,
+    exclusions: set[int] | None = None,
+) -> tuple[int, int, str | None]:
+    """Score one grid candidate: return (terrain_conflicts, osm_conflicts, error_or_None)."""
     ox = ideal_ox + dx
     oz = ideal_oz + dz
     place_content, _ = generate_place_function(sb, ox, y, oz, "_scan")
     scan = _scan_conflicts(place_content, region_dir)
-    return len(scan["conflicts"]), scan.get("error")
+    osm_count = 0
+    if osm_buildings is not None:
+        osm_hits = _scan_osm_collisions(
+            ox, oz, sb.width, sb.depth,
+            exclusions=exclusions,
+        )
+        osm_count = len([c for c in osm_hits if not c["expected"]])
+    return len(scan["conflicts"]), osm_count, scan.get("error")
 
 
 def cmd_live(name: str, osm_id: int | None, lat: float | None = None,
              lon: float | None = None, force: bool = False,
-             offset: tuple[int, int] | None = None) -> None:
+             offset: tuple[int, int] | None = None,
+             expect_neighbors: bool = False,
+             add_exclusion: bool = False) -> None:
     """Place asset at its real geographic location on the Arnis map."""
     # 1. Build / rebuild
     sb = _build_and_load(name)
@@ -624,6 +891,44 @@ def cmd_live(name: str, osm_id: int | None, lat: float | None = None,
     #    undo: surgical setblock→air only — the Arnis blocks that were beneath the
     #    structure are still there (additive placement never removed them)
     undo_content = generate_undo_function(sb, ox, PAD_Y, oz, name)
+
+    # 4b. OSM building collision scan — warn if asset footprint overlaps
+    #     buildings from enriched_overpass.json that Arnis will render
+    osm_collisions = _scan_osm_collisions(
+        ox, oz, sb.width, sb.depth,
+        expect_neighbors=expect_neighbors,
+    )
+    if osm_collisions:
+        _print_osm_collision_report(name, osm_collisions)
+        unexpected = [c for c in osm_collisions if not c["expected"]]
+        if unexpected:
+            if force:
+                print("[stage] --force flag set — proceeding despite OSM collisions.\n")
+            else:
+                try:
+                    ans = input(
+                        "[stage] Proceed despite OSM building collisions? [y/N] "
+                    ).strip().lower()
+                except EOFError:
+                    ans = "n"
+                if ans not in ("y", "yes"):
+                    print(
+                        "[stage] Placement aborted.\n"
+                        "[stage] Options:\n"
+                        "[stage]   • Use --offset DX DZ to shift away from collisions\n"
+                        "[stage]   • Use --add-exclusion to remove colliding buildings from Arnis\n"
+                        "[stage]   • Use --force to proceed anyway"
+                    )
+                    return
+            if add_exclusion:
+                engulfed_ids = [
+                    c["osm_id"] for c in unexpected
+                    if c["classification"] == "engulfed"
+                ]
+                if engulfed_ids:
+                    _add_to_iconic_exclusions(engulfed_ids)
+    else:
+        print(f"[stage] [OK] No OSM building collisions detected.")
 
     # 5. Collision detection — warn before overwriting non-safe terrain
     region_dir = WORKSPACE / "server" / "BuildDavis" / "region"
@@ -729,6 +1034,65 @@ def cmd_live(name: str, osm_id: int | None, lat: float | None = None,
     print(f"[stage] OSM way: https://www.openstreetmap.org/way/{osm_id}")
 
 
+def cmd_dry_run(name: str, osm_id: int | None,
+                lat: float | None = None, lon: float | None = None,
+                offset: tuple[int, int] | None = None,
+                expect_neighbors: bool = False,
+                add_exclusion: bool = False) -> None:
+    """Run OSM + terrain collision scan without placing anything."""
+    sb = _build_and_load(name)
+
+    # Resolve coordinates
+    if lat is not None and lon is not None:
+        print(f"[stage] Using explicit coordinates: lat={lat:.6f} lon={lon:.6f}")
+    else:
+        lat, lon = locate_osm_feature(osm_id)
+    cx, cz = geo_to_mc(lat, lon)
+    ox = cx - sb.width  // 2
+    oz = cz - sb.depth  // 2
+    if offset:
+        ox += offset[0]
+        oz += offset[1]
+    print(f"[stage] DRY RUN — no blocks will be placed.")
+    print(f"[stage] Target origin: ({ox}, {PAD_Y}, {oz})  footprint: {sb.width}×{sb.depth}")
+
+    # OSM collision scan
+    osm_collisions = _scan_osm_collisions(
+        ox, oz, sb.width, sb.depth,
+        expect_neighbors=expect_neighbors,
+    )
+    if osm_collisions:
+        _print_osm_collision_report(name, osm_collisions)
+        if add_exclusion:
+            engulfed_ids = [
+                c["osm_id"] for c in osm_collisions
+                if not c["expected"] and c["classification"] == "engulfed"
+            ]
+            if engulfed_ids:
+                _add_to_iconic_exclusions(engulfed_ids)
+    else:
+        print(f"[stage] [OK] No OSM building collisions detected.")
+
+    # Terrain collision scan (if region files exist)
+    region_dir = WORKSPACE / "server" / "BuildDavis" / "region"
+    if region_dir.is_dir():
+        place_content, count = generate_place_function(sb, ox, PAD_Y, oz, name)
+        print(f"[stage] Scanning {count} block positions for terrain conflicts …")
+        scan = _scan_conflicts(place_content, region_dir)
+        conflicts = scan.get("conflicts", [])
+        if conflicts:
+            _print_conflict_report(name, ox, oz, conflicts)
+        else:
+            scanned = scan.get("scanned", 0)
+            print(f"[stage] [OK] No terrain conflicts in {scanned} positions.")
+        if scan.get("error"):
+            print(f"[stage] NOTICE: {scan['error']}")
+    else:
+        print("[stage] Terrain scan skipped — no region files found.")
+
+    print(f"\n[stage] Dry run complete. Use --live to place for real.")
+
+
 def cmd_find_safe(name: str, osm_id: int | None,
                   lat: float | None = None, lon: float | None = None) -> None:
     """Rank candidate positions near the OSM centroid by terrain-conflict count."""
@@ -760,37 +1124,45 @@ def cmd_find_safe(name: str, osm_id: int | None,
     n_candidates = len(range(-RADIUS, RADIUS + 1, STEP)) ** 2
     print(f"\n[stage] Scanning {n_candidates} candidate positions (±{RADIUS} blocks, step {STEP}) …")
 
-    results: list[tuple[int, int, int, str | None]] = []
+    # Pre-load OSM buildings once (avoid re-reading JSON 81 times)
+    exclusions = _load_iconic_exclusions()
+    osm_buildings = _load_osm_buildings()
+
+    results: list[tuple[int, int, int, int, str | None]] = []
     for dx in range(-RADIUS, RADIUS + 1, STEP):
         for dz in range(-RADIUS, RADIUS + 1, STEP):
-            count, err = _score_position(sb, dx, dz, ideal_ox, ideal_oz, region_dir)
-            results.append((count, dx, dz, err))
-    results.sort()  # primary: conflict_count; ties: dx then dz (ascending)
+            terrain, osm_n, err = _score_position(
+                sb, dx, dz, ideal_ox, ideal_oz, region_dir,
+                osm_buildings=osm_buildings, exclusions=exclusions,
+            )
+            results.append((osm_n * 1000 + terrain, dx, dz, osm_n, err))
+    results.sort()  # primary: weighted score (OSM×1000 + terrain)
 
     # Print ranked table (top 15)
-    w = 60
+    w = 72
     print(f"\n{'─' * w}")
     print(f"  find-safe: {name}  ({sb.width}×{sb.depth})")
     print(f"  Ideal origin  X={ideal_ox}  Z={ideal_oz}")
     print(f"{'─' * w}")
-    print(f"  {'Rank':>4}  {'Offset (dx,dz)':>15}  {'Conflicts':>9}  Note")
-    print(f"  {'─' * 4}  {'─' * 15}  {'─' * 9}  {'─' * 30}")
-    for rank, (count, dx, dz, err) in enumerate(results[:15], 1):
+    print(f"  {'Rank':>4}  {'Offset (dx,dz)':>15}  {'Terrain':>7}  {'OSM':>4}  Note")
+    print(f"  {'─' * 4}  {'─' * 15}  {'─' * 7}  {'─' * 4}  {'─' * 30}")
+    for rank, (score, dx, dz, osm_n, err) in enumerate(results[:15], 1):
+        terrain = score - osm_n * 1000
         if dx == 0 and dz == 0:
             note = "← ideal (OSM centroid)"
         elif err:
             note = f"warn: {err[:40]}"
         else:
             note = ""
-        print(f"  {rank:>4}  ({dx:>+3},{dz:>+3})          {count:>9}  {note}")
+        print(f"  {rank:>4}  ({dx:>+3},{dz:>+3})          {terrain:>7}  {osm_n:>4}  {note}")
     print(f"{'─' * w}")
 
     best = results[0]
     osm_arg = f"--osm-id {osm_id}" if osm_id else f"--lat {lat} --lon {lon}"
     offset_args = "" if (best[1] == 0 and best[2] == 0) else f" --offset {best[1]} {best[2]}"
-    force_arg = " --force" if best[0] > 0 else ""
+    force_arg = " --force" if (best[0] - best[3] * 1000) > 0 else ""
     print(
-        f"\n  Best: {best[0]} conflict(s)\n"
+        f"\n  Best: {best[0] - best[3] * 1000} terrain conflict(s), {best[3]} OSM building(s)\n"
         f"  python Code/stage.py {name} --live {osm_arg}{offset_args}{force_arg}\n"
     )
 
@@ -831,6 +1203,18 @@ def main() -> None:
         "--offset", nargs=2, type=int, metavar=("DX", "DZ"),
         help="Shift the live placement origin by DX blocks (X) and DZ blocks (Z)",
     )
+    parser.add_argument(
+        "--dry-run", action="store_true",
+        help="Run OSM + terrain collision scan without placing anything",
+    )
+    parser.add_argument(
+        "--add-exclusion", action="store_true",
+        help="Auto-add engulfed colliding OSM way IDs to ICONIC_EXCLUSIONS in adapter.py",
+    )
+    parser.add_argument(
+        "--expect-neighbors", action="store_true",
+        help="Mark neighbor-classified collisions as expected (integration-style assets)",
+    )
     args = parser.parse_args()
 
     if args.setup_pad:
@@ -840,7 +1224,18 @@ def main() -> None:
     if not args.name:
         parser.error("asset name is required (or use --setup-pad)")
 
-    if args.find_safe:
+    if args.dry_run:
+        has_osm = bool(args.osm_id)
+        has_latlon = (args.lat is not None and args.lon is not None)
+        if not has_osm and not has_latlon:
+            parser.error("--dry-run requires either --osm-id <ID> or both --lat <LAT> --lon <LON>")
+        cmd_dry_run(
+            args.name, args.osm_id, lat=args.lat, lon=args.lon,
+            offset=tuple(args.offset) if args.offset else None,
+            expect_neighbors=args.expect_neighbors,
+            add_exclusion=args.add_exclusion,
+        )
+    elif args.find_safe:
         has_osm = bool(args.osm_id)
         has_latlon = (args.lat is not None and args.lon is not None)
         if not has_osm and not has_latlon:
@@ -852,7 +1247,9 @@ def main() -> None:
         if not has_osm and not has_latlon:
             parser.error("--live requires either --osm-id <ID> or both --lat <LAT> --lon <LON>")
         cmd_live(args.name, args.osm_id, lat=args.lat, lon=args.lon, force=args.force,
-                 offset=tuple(args.offset) if args.offset else None)
+                 offset=tuple(args.offset) if args.offset else None,
+                 expect_neighbors=args.expect_neighbors,
+                 add_exclusion=args.add_exclusion)
     elif args.unstage:
         cmd_unstage(args.name)
     else:

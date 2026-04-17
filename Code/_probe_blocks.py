@@ -3,7 +3,8 @@ import sys, os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__)))
 from rcon_cmd import rcon
 
-HOST, PORT, PW = 'localhost', 25575, 'REDACTED_RCON_PASS'
+import os; from dotenv import load_dotenv; load_dotenv()
+HOST, PORT, PW = 'localhost', 25575, os.environ['RCON_PASS']
 
 # Check centroid (789, 2213) and all 4 leg positions
 positions = [

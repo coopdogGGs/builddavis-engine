@@ -228,6 +228,11 @@ pub fn parse_osm_data(
         }
     }
 
+    let mut dbg_bldg_ways_total: u64 = 0;
+    let mut dbg_bldg_ways_clipped_out: u64 = 0;
+    let mut dbg_bldg_ways_no_nodes: u64 = 0;
+    let mut dbg_bldg_ways_passed: u64 = 0;
+
     // Second pass: process ways and clip them to bbox
     for element in data.ways {
         let mut nodes: Vec<ProcessedNode> = vec![];
@@ -236,6 +241,14 @@ pub fn parse_osm_data(
                 if let Some(node) = nodes_map.get(&node_id) {
                     nodes.push(node.clone());
                 }
+            }
+        }
+
+        let is_building = element.tags.as_ref().map_or(false, |t| t.contains_key("building") || t.contains_key("building:part"));
+        if is_building {
+            dbg_bldg_ways_total += 1;
+            if nodes.is_empty() {
+                dbg_bldg_ways_no_nodes += 1;
             }
         }
 
@@ -255,7 +268,14 @@ pub fn parse_osm_data(
 
         // Skip ways that are completely outside the bbox (empty after clipping)
         if clipped_nodes.is_empty() {
+            if is_building {
+                dbg_bldg_ways_clipped_out += 1;
+            }
             continue;
+        }
+
+        if is_building {
+            dbg_bldg_ways_passed += 1;
         }
 
         let processed: ProcessedWay = ProcessedWay {
@@ -266,6 +286,9 @@ pub fn parse_osm_data(
 
         processed_elements.push(ProcessedElement::Way(processed));
     }
+
+    println!("[PARSER BLDG] total={} no_nodes={} clipped_out={} passed={}",
+        dbg_bldg_ways_total, dbg_bldg_ways_no_nodes, dbg_bldg_ways_clipped_out, dbg_bldg_ways_passed);
 
     // Third pass: process relations and clip member ways
     for element in data.relations {

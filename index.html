@@ -9,7 +9,11 @@
 <meta property="og:description" content="The entire city of Davis, CA — rebuilt block by block in Minecraft.">
 <meta property="og:url" content="https://builddavis.org/">
 <meta property="og:type" content="website">
+<meta property="og:image" content="https://builddavis.org/assets/screenshots/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://builddavis.org/assets/screenshots/og.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
@@ -767,7 +771,14 @@ footer {
 /* ── TABLET (≤1024px) ── */
 @media(max-width:1024px){
   .iso-station { display:none; }
-  .hero-right { display:none; }
+  .hero-right {
+    position: relative;
+    right: auto; top: auto;
+    transform: none;
+    width: 100%;
+    max-width: 560px;
+    margin-top: 32px;
+  }
   .hero-content { max-width:560px; }
   .how-cards { grid-template-columns:1fr 1fr; }
   .apply-section { gap:40px; }
@@ -856,13 +867,12 @@ footer {
     <li><a href="#how">HOW</a></li>
     <li><a href="#apply">APPLY</a></li>
   </ul>
-  <a href="https://discord.gg/Ujq724Evu5" target="_blank" class="nav-discord">⌨ DISCORD</a>
+  <a href="https://discord.gg/Rt7c6Jje" target="_blank" class="nav-discord">⌨ DISCORD</a>
 </nav>
 
 <!-- HERO -->
 <section class="hero">
   <div class="hero-bg"></div>
-  <div class="mc-splash">Launching soon!</div>
   <div class="hero-content">
     <div class="hero-tag">NEW WORLD GENERATING...</div>
     <div class="hero-title">
@@ -876,7 +886,20 @@ footer {
     </p>
     <div class="hero-btns">
       <a href="#map" class="px-btn px-btn-green">▶ HELP MAP DAVIS</a>
-      <a href="#apply" class="px-btn px-btn-gold">✦ APPLY TO BUILD</a>
+      <a href="#apply" class="px-btn px-btn-green">✦ APPLY TO BUILD</a>
+      <a href="https://discord.gg/Rt7c6Jje" target="_blank" class="px-btn" style="background:var(--sky);color:var(--white);box-shadow:0 6px 0 var(--sky-dark);">⌨ JOIN DISCORD</a>
+    </div>
+    <!-- Server addresses -->
+    <div style="margin-top:28px;display:flex;gap:16px;flex-wrap:wrap;">
+      <div style="background:var(--night2);border:2px solid var(--grass-dark);padding:14px 22px;display:flex;align-items:center;gap:14px;">
+        <div style="font-family:'Press Start 2P',monospace;font-size:9px;color:var(--grass);line-height:1.6;letter-spacing:1px;">JAVA</div>
+        <div style="font-family:'Press Start 2P',monospace;font-size:13px;color:var(--white);letter-spacing:1px;">builddavis.world</div>
+      </div>
+      <div style="background:var(--night2);border:2px solid var(--sky-dark);padding:14px 22px;display:flex;align-items:center;gap:14px;">
+        <div style="font-family:'Press Start 2P',monospace;font-size:9px;color:var(--sky);line-height:1.6;letter-spacing:1px;">BEDROCK</div>
+        <div style="font-family:'Press Start 2P',monospace;font-size:13px;color:var(--white);letter-spacing:1px;">builddavis.world</div>
+        <div style="font-family:'Nunito',sans-serif;font-size:12px;color:rgba(248,248,240,.5);font-weight:700;">PORT 25606</div>
+      </div>
     </div>
   </div>
 
@@ -982,8 +1005,124 @@ footer {
   </div>
 </section>
 
-<!-- OSM GUIDE -->
-<section style="position:relative;z-index:1;background:var(--night);padding:80px 40px;border-bottom:4px solid var(--stone-dark);">
+
+<!-- JOIN THE SERVER -->
+<section id="join" style="position:relative;z-index:1;background:var(--night);padding:80px 40px;border-bottom:4px solid var(--stone-dark);">
+  <div class="section-head">
+    <span class="section-tag">// JOIN THE SERVER</span>
+    <h2 class="section-title">Explore Davis in <span class="t-gold">Minecraft.</span></h2>
+  </div>
+
+  <!-- Platform cards -->
+  <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:4px;margin-bottom:40px;">
+    <!-- Java -->
+    <div style="background:var(--night2);border:4px solid var(--grass-dark);padding:28px 24px;">
+      <div style="font-size:28px;margin-bottom:12px;">☕</div>
+      <div style="font-family:'Press Start 2P',monospace;font-size:12px;color:var(--grass);margin-bottom:16px;">JAVA EDITION</div>
+      <div style="font-size:14px;color:rgba(248,248,240,.6);font-weight:700;margin-bottom:6px;">Server Address</div>
+      <div style="font-family:'Press Start 2P',monospace;font-size:13px;color:var(--white);margin-bottom:16px;background:var(--night);padding:10px 14px;border:2px solid var(--stone-dark);">builddavis.world</div>
+      <div style="font-size:14px;color:rgba(248,248,240,.6);font-weight:700;margin-bottom:6px;">Port</div>
+      <div style="font-family:'Press Start 2P',monospace;font-size:13px;color:var(--white);margin-bottom:16px;background:var(--night);padding:10px 14px;border:2px solid var(--stone-dark);">25606</div>
+      <div style="font-size:13px;color:rgba(248,248,240,.5);line-height:1.8;font-weight:600;">Multiplayer → Add Server → paste address and port → Join</div>
+    </div>
+    <!-- Bedrock -->
+    <div style="background:var(--night2);border:4px solid var(--sky-dark);padding:28px 24px;">
+      <div style="font-size:28px;margin-bottom:12px;">📱</div>
+      <div style="font-family:'Press Start 2P',monospace;font-size:12px;color:var(--sky);margin-bottom:16px;">BEDROCK · MOBILE / SWITCH / XBOX</div>
+      <div style="font-size:14px;color:rgba(248,248,240,.6);font-weight:700;margin-bottom:6px;">Server Address</div>
+      <div style="font-family:'Press Start 2P',monospace;font-size:13px;color:var(--white);margin-bottom:16px;background:var(--night);padding:10px 14px;border:2px solid var(--stone-dark);">builddavis.world</div>
+      <div style="font-size:14px;color:rgba(248,248,240,.6);font-weight:700;margin-bottom:6px;">Port</div>
+      <div style="font-family:'Press Start 2P',monospace;font-size:13px;color:var(--white);margin-bottom:16px;background:var(--night);padding:10px 14px;border:2px solid var(--stone-dark);">25606</div>
+      <div style="font-size:13px;color:rgba(248,248,240,.5);line-height:1.8;font-weight:600;">Play → Servers → scroll down → Add Server → paste address and port → Join</div>
+    </div>
+  </div>
+
+  <!-- Quick rules -->
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-bottom:40px;">
+    <div style="background:var(--night2);padding:18px 20px;display:flex;gap:12px;align-items:flex-start;">
+      <span style="font-size:20px;flex-shrink:0;">🗺️</span>
+      <div><div style="font-size:14px;font-weight:800;color:var(--white);margin-bottom:4px;">Explore freely</div><div style="font-size:12px;color:rgba(248,248,240,.5);font-weight:600;line-height:1.7;">Fly around the entire town</div></div>
+    </div>
+    <div style="background:var(--night2);padding:18px 20px;display:flex;gap:12px;align-items:flex-start;">
+      <span style="font-size:20px;flex-shrink:0;">🔨</span>
+      <div><div style="font-size:14px;font-weight:800;color:var(--white);margin-bottom:4px;">No building</div><div style="font-size:12px;color:rgba(248,248,240,.5);font-weight:600;line-height:1.7;">Without builder rank — apply below</div></div>
+    </div>
+    <div style="background:var(--night2);padding:18px 20px;display:flex;gap:12px;align-items:flex-start;">
+      <span style="font-size:20px;flex-shrink:0;">🐛</span>
+      <div><div style="font-size:14px;font-weight:800;color:var(--white);margin-bottom:4px;">Found a bug?</div><div style="font-size:12px;color:rgba(248,248,240,.5);font-weight:600;line-height:1.7;">Report it in Discord</div></div>
+    </div>
+  </div>
+
+  <!-- Where to go first -->
+  <div style="font-family:'Press Start 2P',monospace;font-size:10px;color:var(--gold);margin-bottom:16px;letter-spacing:1px;">// WHERE TO GO FIRST</div>
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px;">
+    <div style="background:var(--night2);border:4px solid var(--stone-dark);padding:24px 20px;">
+      <div style="font-size:24px;margin-bottom:10px;">🏗️</div>
+      <div style="font-family:'Press Start 2P',monospace;font-size:11px;color:var(--white);margin-bottom:8px;">Water Tower</div>
+      <div style="font-family:'Press Start 2P',monospace;font-size:10px;color:var(--grass);margin-bottom:12px;background:var(--night);padding:8px 10px;border:2px solid var(--grass-dark);display:inline-block;">/warp watertower</div>
+      <div style="font-size:13px;color:rgba(248,248,240,.5);font-weight:600;line-height:1.7;">The iconic UC Davis landmark — 48 blocks tall with "UC DAVIS" lettering</div>
+    </div>
+    <div style="background:var(--night2);border:4px solid var(--stone-dark);padding:24px 20px;">
+      <div style="font-size:24px;margin-bottom:10px;">🏟️</div>
+      <div style="font-family:'Press Start 2P',monospace;font-size:11px;color:var(--white);margin-bottom:8px;">Aggie Stadium</div>
+      <div style="font-family:'Press Start 2P',monospace;font-size:10px;color:var(--grass);margin-bottom:12px;background:var(--night);padding:8px 10px;border:2px solid var(--grass-dark);display:inline-block;">/warp stadium</div>
+      <div style="font-size:13px;color:rgba(248,248,240,.5);font-weight:600;line-height:1.7;">Full oval track, bleachers, end zones, goal posts</div>
+    </div>
+    <div style="background:var(--night2);border:4px solid var(--stone-dark);padding:24px 20px;">
+      <div style="font-size:24px;margin-bottom:10px;">🎠</div>
+      <div style="font-family:'Press Start 2P',monospace;font-size:11px;color:var(--white);margin-bottom:8px;">Flying Carousel</div>
+      <div style="font-family:'Press Start 2P',monospace;font-size:10px;color:var(--grass);margin-bottom:12px;background:var(--night);padding:8px 10px;border:2px solid var(--grass-dark);display:inline-block;">/warp carousel</div>
+      <div style="font-size:13px;color:rgba(248,248,240,.5);font-weight:600;line-height:1.7;">Hand-carved animals in Central Park's beloved carousel pavilion</div>
+    </div>
+  </div>
+</section>
+
+<!-- TWO TRACKS -->
+<section class="tracks-section">
+  <div class="section-head">
+    <span class="section-tag">// CHOOSE YOUR ROLE</span>
+    <h2 class="section-title">TWO WAYS TO<br><span class="t-gold">CONTRIBUTE.</span></h2>
+  </div>
+  <div class="game-modes">
+    <div class="game-mode game-mode-survival" id="map">
+      <div class="mode-badge mode-badge-survival">SURVIVAL MODE</div>
+      <h3 class="mode-title">MAP<br>DAVIS</h3>
+      <div class="mode-subtitle">NO MINECRAFT NEEDED</div>
+      <p class="mode-desc">Add real-world detail to OpenStreetMap and it automatically appears in the generated world. Your bench, your bike rack, your tree — in the game forever.</p>
+      <ul class="mode-steps">
+        <li>Create a free OpenStreetMap account</li>
+        <li>Open the iD editor — we'll link you to Davis directly</li>
+        <li>Walk or bike a street, add what you see</li>
+        <li>Your edits appear in the world at next generation</li>
+      </ul>
+      <div class="reward-box"><strong>✦ YOUR REWARD</strong>10+ edits = a special thanks in the credits.</div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;">
+        <a href="#osm-guide" class="px-btn px-btn-green">📖 LEARN MORE</a>
+        <a href="https://www.openstreetmap.org/edit#map=16/38.5449/-121.7405" target="_blank" class="px-btn px-btn-green">▶ OPEN OSM EDITOR</a>
+        <a href="https://github.com/coopdogGGs/builddavis-engine/issues/new?template=osm-credit.yml" target="_blank" class="px-btn px-btn-gold">✦ CLAIM YOUR CREDIT</a>
+      </div>
+    </div>
+    <div class="game-mode game-mode-creative" id="build">
+      <div class="mode-badge mode-badge-creative">CREATIVE MODE</div>
+      <h3 class="mode-title">BUILD<br>DAVIS</h3>
+      <div class="mode-subtitle">MINECRAFT BUILDERS WANTED</div>
+      <p class="mode-desc">Join the contributor server and start building on the Build Davis server! Claim a zone, get the style guide, and make your neighborhood look exactly like the real thing.</p>
+      <ul class="mode-steps">
+        <li>Apply with your Minecraft username below</li>
+        <li>Get approved — we review every application personally</li>
+        <li>Join Discord and claim your neighborhood zone</li>
+        <li>Start building on the Build Davis server!</li>
+      </ul>
+      <div class="reward-box"><strong>✦ YOUR REWARD</strong>Named contributor credit on a plaque in-world and in all project documentation.</div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;">
+        <a href="#apply" class="px-btn px-btn-green">✦ APPLY TO BUILD</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- OSM GUIDE (linked from Map Davis "Learn More") -->
+<section id="osm-guide" style="position:relative;z-index:1;background:var(--night);padding:80px 40px;border-bottom:4px solid var(--stone-dark);">
   <div class="section-head">
     <span class="section-tag">// TRACK 01 · NO MINECRAFT NEEDED</span>
     <h2 class="section-title">Help us <span class="t-gold">map Davis.</span></h2>
@@ -1038,50 +1177,6 @@ footer {
 
 </section>
 
-<!-- TWO TRACKS -->
-<section class="tracks-section">
-  <div class="section-head">
-    <span class="section-tag">// CHOOSE YOUR ROLE</span>
-    <h2 class="section-title">TWO WAYS TO<br><span class="t-gold">CONTRIBUTE.</span></h2>
-  </div>
-  <div class="game-modes">
-    <div class="game-mode game-mode-survival" id="map">
-      <div class="mode-badge mode-badge-survival">SURVIVAL MODE</div>
-      <h3 class="mode-title">MAP<br>DAVIS</h3>
-      <div class="mode-subtitle">NO MINECRAFT NEEDED</div>
-      <p class="mode-desc">Add real-world detail to OpenStreetMap and it automatically appears in the generated world. Your bench, your bike rack, your tree — in the game forever.</p>
-      <ul class="mode-steps">
-        <li>Create a free OpenStreetMap account</li>
-        <li>Open the iD editor — we'll link you to Davis directly</li>
-        <li>Walk or bike a street, add what you see</li>
-        <li>Your edits appear in the world at next generation</li>
-      </ul>
-      <div class="reward-box"><strong>✦ YOUR REWARD</strong>10+ edits = a special thanks in the credits.</div>
-      <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;">
-        <a href="https://www.openstreetmap.org/edit#map=16/38.5449/-121.7405" target="_blank" class="px-btn px-btn-green">▶ OPEN OSM EDITOR</a>
-        <a href="https://github.com/coopdogGGs/builddavis-engine/issues/new?template=osm-credit.yml" target="_blank" class="px-btn px-btn-gold">✦ CLAIM YOUR CREDIT</a>
-        <a href="https://discord.gg/Ujq724Evu5" target="_blank" class="px-btn" style="background:var(--sky);color:var(--white);box-shadow:0 6px 0 var(--sky-dark);">⌨ JOIN DISCORD</a>
-      </div>
-    </div>
-    <div class="game-mode game-mode-creative" id="build">
-      <div class="mode-badge mode-badge-creative">CREATIVE MODE</div>
-      <h3 class="mode-title">BUILD<br>DAVIS</h3>
-      <div class="mode-subtitle">MINECRAFT BUILDERS WANTED</div>
-      <p class="mode-desc">Join the contributor server and start building on the Build Davis server! Claim a zone, get the style guide, and make your neighborhood look exactly like the real thing.</p>
-      <ul class="mode-steps">
-        <li>Apply with your Minecraft username below</li>
-        <li>Get approved — we review every application personally</li>
-        <li>Join Discord and claim your neighborhood zone</li>
-        <li>Start building on the Build Davis server!</li>
-      </ul>
-      <div class="reward-box"><strong>✦ YOUR REWARD</strong>Named contributor credit on a plaque in-world and in all project documentation.</div>
-      <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;">
-        <a href="#apply" class="px-btn px-btn-gold">✦ APPLY TO BUILD</a>
-        <a href="https://discord.gg/Ujq724Evu5" target="_blank" class="px-btn" style="background:var(--sky);color:var(--white);box-shadow:0 6px 0 var(--sky-dark);">⌨ JOIN DISCORD</a>
-      </div>
-    </div>
-  </div>
-</section>
 
 <!-- APPLY -->
 <section class="apply-section" id="apply">

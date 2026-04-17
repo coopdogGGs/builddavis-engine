@@ -60,15 +60,7 @@ BRACE_TIERS = [8, 16, 24]
 
 sb = StructureBuilder(width=FOOTPRINT, height=TOTAL_H, depth=FOOTPRINT)
 
-# ═══════════════════════════════════════════════════════════════════════════
-# STEP 1 — Ground pad (circular concrete slab)
-# ═══════════════════════════════════════════════════════════════════════════
-for x in range(FOOTPRINT):
-    for z in range(FOOTPRINT):
-        dx = x - CX
-        dz = z - CZ
-        if dx*dx + dz*dz <= (LEG_BASE_RAD + 1)**2:
-            sb.set_block(x, PAD_Y, z, PAD)
+# Ground pad intentionally omitted — legs rest directly on terrain (no circular base).
 
 # ═══════════════════════════════════════════════════════════════════════════
 # STEP 2 — Support legs (6 angled columns)

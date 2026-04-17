@@ -92,6 +92,16 @@ FOOTPRINT_RATIO_CHECKS = {
         (200,   4.5),
         (0,     6.0),
     ],
+    "office": [
+        (1000,  5.0),   # large office footprint (>1000m²) → 1 story / 5m
+        (500,   7.0),   # mid-size → 2 story / 7m
+        (0,    14.0),   # small office → uncapped
+    ],
+    "commercial": [
+        (1000,  5.0),   # large commercial → 1 story
+        (500,   7.0),   # mid → 2 story
+        (0,    14.0),
+    ],
 }
 
 DEFAULT_HEIGHT_M = {
@@ -235,7 +245,7 @@ class MultiSourceValidator:
             readings.append(HeightReading("overture", overture_height, trust,
                                           f"Overture={overture_height}m"))
 
-        result = self._triangulate(readings, subtype)
+        result = self._triangulate(readings, subtype, footprint_area_m2)
 
         # Apply to tags
         tags["height"] = str(round(result.final_height_m, 1))
@@ -281,19 +291,38 @@ class MultiSourceValidator:
                     pass
         return None
 
-    def _triangulate(self, readings, subtype):
+    def _triangulate(self, readings, subtype, footprint_area_m2=None):
         if not readings:
             default_h = DEFAULT_HEIGHT_M.get(subtype, DEFAULT_HEIGHT_M["default"])
+            # Apply footprint ratio cap to type_default (large offices/commercial → 1 story)
+            if footprint_area_m2 and subtype in FOOTPRINT_RATIO_CHECKS:
+                for min_fp, max_h in FOOTPRINT_RATIO_CHECKS[subtype]:
+                    if footprint_area_m2 >= min_fp:
+                        default_h = min(default_h, max_h)
+                        break
             return HeightResult(default_h, max(1, round(default_h / METRES_PER_LEVEL)),
                                 0.3, "yellow", "type_default", readings,
-                                f"No height data — default for {subtype}")
+                                f"No height data — default for {subtype}"
+                                + (f" (footprint {footprint_area_m2:.0f}m² capped to {default_h}m)"
+                                   if footprint_area_m2 and subtype in FOOTPRINT_RATIO_CHECKS
+                                   else ""))
 
         if len(readings) == 1:
             r = readings[0]
+            h = r.height_m
+            note = f"Single source: {r.source}"
+            # Apply footprint ratio cap only to low-trust sources (not OSM explicit)
+            if footprint_area_m2 and subtype in FOOTPRINT_RATIO_CHECKS and r.trust < 0.9:
+                for min_fp, max_h in FOOTPRINT_RATIO_CHECKS[subtype]:
+                    if footprint_area_m2 >= min_fp:
+                        if h > max_h:
+                            note += f" (footprint {footprint_area_m2:.0f}m² capped {h:.1f}→{max_h}m)"
+                            h = max_h
+                        break
             flag = "yellow" if r.trust < 0.9 else "green"
-            return HeightResult(r.height_m, max(1, round(r.height_m / METRES_PER_LEVEL)),
+            return HeightResult(h, max(1, round(h / METRES_PER_LEVEL)),
                                 r.trust * 0.8, flag, r.source, readings,
-                                f"Single source: {r.source}")
+                                note)
 
         sorted_r = sorted(readings, key=lambda r: r.trust, reverse=True)
         best = sorted_r[0]

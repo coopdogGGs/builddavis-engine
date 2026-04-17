@@ -29,6 +29,7 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from deploy_iconic import geo_to_mc, locate_osm_feature
+from mc_map import generate_map
 from server_mgr import rcon_cmd
 
 
@@ -102,6 +103,8 @@ def main():
                        help="OSM way ID (exact)")
     parser.add_argument("--tp", action="store_true",
                         help="Teleport player to the location via RCON")
+    parser.add_argument("--map", action="store_true",
+                        help="Generate and open an HTML map showing the target on real-world Davis")
     parser.add_argument("--y", type=int, default=80,
                         help="Y coordinate for teleport (default: 80 — above terrain for a clear view)")
     args = parser.parse_args()
@@ -122,6 +125,14 @@ def main():
     print(f"[mc_locate] OSM way {osm_id}")
     print(f"[mc_locate] Geo:  lat={lat:.6f}, lon={lon:.6f}")
     print(f"[mc_locate] MC:   X={x}, Z={z}  (Y={args.y} for TP)")
+
+    # ── Map visualization ─────────────────────────────────────────────────────
+    if args.map:
+        import webbrowser
+        label = args.name or f"OSM {osm_id}"
+        out = generate_map(lat, lon, label)
+        print(f"[mc_locate] Map saved: {out}")
+        webbrowser.open(str(out.resolve()))
 
     # ── Teleport player ───────────────────────────────────────────────────────
     if args.tp:

@@ -2301,8 +2301,14 @@ pub fn generate_buildings(
     hole_polygons: Option<&[HolePolygon]>,
     flood_fill_cache: &FloodFillCache,
 ) {
+    use std::sync::atomic::{AtomicU64, Ordering};
+    static SKIP_UNDERGROUND: AtomicU64 = AtomicU64::new(0);
+    static SKIP_EMPTY_FLOOR: AtomicU64 = AtomicU64::new(0);
+    static RENDERED: AtomicU64 = AtomicU64::new(0);
+
     // Early return for underground buildings
     if should_skip_underground_building(element) {
+        SKIP_UNDERGROUND.fetch_add(1, Ordering::Relaxed);
         return;
     }
 
@@ -2359,7 +2365,16 @@ pub fn generate_buildings(
 
     let cached_footprint_size = cached_floor_area.len();
     if cached_footprint_size == 0 {
+        SKIP_EMPTY_FLOOR.fetch_add(1, Ordering::Relaxed);
         return;
+    }
+
+    RENDERED.fetch_add(1, Ordering::Relaxed);
+    // Print summary periodically
+    let r = RENDERED.load(Ordering::Relaxed);
+    if r % 100 == 0 || r == 1 {
+        eprintln!("[BLDG] rendered={} skip_underground={} skip_empty_floor={}",
+            r, SKIP_UNDERGROUND.load(Ordering::Relaxed), SKIP_EMPTY_FLOOR.load(Ordering::Relaxed));
     }
 
     // Calculate start Y offset

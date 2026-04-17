@@ -279,7 +279,23 @@ def main():
     for i, mca in enumerate(region_files, 1):
         remote_path = f"{remote_region}/{mca.name}"
         print(f"  [{i:3d}/{len(region_files)}]", end=" ")
-        total_bytes += upload_file(ftp, mca, remote_path, dry_run)
+        for attempt in range(3):
+            try:
+                total_bytes += upload_file(ftp, mca, remote_path, dry_run)
+                break
+            except (ConnectionResetError, BrokenPipeError, OSError, EOFError,
+                    ftplib.error_temp, ftplib.error_reply) as e:
+                print(f"\n  ⚠ Connection lost ({e}), reconnecting (attempt {attempt+2}/3)...")
+                time.sleep(2)
+                try:
+                    ftp.quit()
+                except Exception:
+                    pass
+                ftp = connect(host, port, user, passwd)
+                ensure_remote_dir(ftp, remote_world)
+                ensure_remote_dir(ftp, remote_region)
+        else:
+            print(f"\n  ✗ FAILED after 3 attempts: {mca.name}")
         total_files += 1
 
     if not region_only:

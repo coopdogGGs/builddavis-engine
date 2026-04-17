@@ -53,7 +53,7 @@ ARNIS = next((p for p in _ARNIS_CANDIDATES if p.exists()), None)
 PYTHON = WORKSPACE / ".venv" / "Scripts" / "python.exe"
 
 # Full-city render parameters (must match deploy_iconic.py)
-FULL_CITY_BBOX   = "38.530,-121.760,38.590,-121.710"
+FULL_CITY_BBOX   = "38.527,-121.812,38.591,-121.670"
 GROUND_LEVEL     = 49
 
 # Regions that contain the damaged footprints

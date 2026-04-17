@@ -27,9 +27,11 @@ GROUND_Y = 49
 
 # ── RCON configuration ───────────────────────────────────────────────────────
 
-RCON_HOST = "127.0.0.1"
-RCON_PORT = 25575
-RCON_PASS = "REDACTED_RCON_PASS"
+from dotenv import load_dotenv
+load_dotenv(Path(__file__).resolve().parent.parent / '.env')
+RCON_HOST = os.environ.get('RCON_HOST', '127.0.0.1')
+RCON_PORT = int(os.environ.get('RCON_PORT', '25575'))
+RCON_PASS = os.environ['RCON_PASS']
 
 # ── Data paths ───────────────────────────────────────────────────────────────
 

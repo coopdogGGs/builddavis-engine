@@ -1199,7 +1199,7 @@ def run_lidar(
 
     # Load manifest and bbox
     # Manifest is optional in synthetic mode or when --bbox is provided
-    DAVIS_DEFAULT_BBOX = "38.510,-121.780,38.590,-121.690"
+    DAVIS_DEFAULT_BBOX = "38.527,-121.812,38.591,-121.670"
     manifest_p = Path(manifest_path)
     manifest   = {}
 
